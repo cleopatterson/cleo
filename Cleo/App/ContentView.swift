@@ -15,7 +15,8 @@ struct ContentView: View {
     init(calendarService: DeviceCalendarService,
          claudeService: ClaudeAPIService,
          persistence: PersistenceController,
-         theme: ThemeManager) {
+         theme: ThemeManager,
+         trustSyncService: TrustSyncService) {
         self.calendarService = calendarService
         self.claudeService = claudeService
         self.persistence = persistence
@@ -28,7 +29,8 @@ struct ContentView: View {
         ))
         _invoicingVM = State(initialValue: InvoicingViewModel(
             context: persistence.viewContext,
-            claudeService: claudeService
+            claudeService: claudeService,
+            trustSyncService: trustSyncService
         ))
         _roadmapVM = State(initialValue: RoadmapViewModel(
             context: persistence.viewContext,
@@ -41,7 +43,8 @@ struct ContentView: View {
         _metricsVM = State(initialValue: MetricsViewModel(
             timeService: TimeTrackingService(),
             claudeService: claudeService,
-            persistence: persistence
+            persistence: persistence,
+            trustSyncService: trustSyncService
         ))
     }
 

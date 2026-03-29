@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="24D5034f" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" usedWithSwiftData="NO" userDefinedModelVersionIdentifier="">
-    <entity name="BusinessProfile" representedClassName="BusinessProfile" syncable="YES">
+    <entity name="BusinessProfile" representedClassName="BusinessProfile" syncable="NO">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="businessName" attributeType="String" defaultValueString=""/>
         <attribute name="abn" optional="YES" attributeType="String"/>
@@ -20,7 +20,7 @@
         <attribute name="invoicePrefix" attributeType="String" defaultValueString="INV"/>
         <attribute name="nextInvoiceSequence" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
     </entity>
-    <entity name="Invoice" representedClassName="Invoice" syncable="YES">
+    <entity name="Invoice" representedClassName="Invoice" syncable="NO">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="invoiceNumber" attributeType="String" defaultValueString=""/>
         <attribute name="clientName" attributeType="String" defaultValueString=""/>
@@ -37,7 +37,7 @@
         <attribute name="pdfData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <relationship name="lineItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="InvoiceLineItem" inverseName="invoice" inverseEntity="InvoiceLineItem"/>
     </entity>
-    <entity name="InvoiceLineItem" representedClassName="InvoiceLineItem" syncable="YES">
+    <entity name="InvoiceLineItem" representedClassName="InvoiceLineItem" syncable="NO">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="itemDescription" attributeType="String" defaultValueString=""/>
         <attribute name="quantity" attributeType="Double" defaultValueString="1" usesScalarValueType="YES"/>
@@ -45,7 +45,7 @@
         <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="invoice" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Invoice" inverseName="lineItems" inverseEntity="Invoice"/>
     </entity>
-    <entity name="Expense" representedClassName="Expense" syncable="YES">
+    <entity name="Expense" representedClassName="Expense" syncable="NO">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="amount" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="categoryRaw" attributeType="String" defaultValueString="Other"/>
@@ -54,7 +54,7 @@
         <attribute name="receiptImagePath" optional="YES" attributeType="String"/>
         <attribute name="isRecurring" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
     </entity>
-    <entity name="Client" representedClassName="Client" syncable="YES">
+    <entity name="Client" representedClassName="Client" syncable="NO">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String" defaultValueString=""/>
         <attribute name="email" attributeType="String" defaultValueString=""/>
@@ -63,7 +63,7 @@
         <attribute name="defaultPaymentTermsDays" attributeType="Integer 16" defaultValueString="14" usesScalarValueType="YES"/>
         <attribute name="isPinned" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
     </entity>
-    <entity name="Milestone" representedClassName="Milestone" syncable="YES">
+    <entity name="Milestone" representedClassName="Milestone" syncable="NO">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="title" attributeType="String" defaultValueString=""/>
         <attribute name="emoji" attributeType="String" defaultValueString="&#x1F3AF;"/>
@@ -73,7 +73,7 @@
         <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="tasks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="RoadmapTask" inverseName="milestone" inverseEntity="RoadmapTask"/>
     </entity>
-    <entity name="RoadmapTask" representedClassName="RoadmapTask" syncable="YES">
+    <entity name="RoadmapTask" representedClassName="RoadmapTask" syncable="NO">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="title" attributeType="String" defaultValueString=""/>
         <attribute name="statusRaw" attributeType="String" defaultValueString="backlog"/>
@@ -86,7 +86,7 @@
         <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="milestone" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Milestone" inverseName="tasks" inverseEntity="Milestone"/>
     </entity>
-    <entity name="TodoNote" representedClassName="TodoNote" syncable="YES">
+    <entity name="TodoNote" representedClassName="TodoNote" syncable="NO">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="title" attributeType="String" defaultValueString=""/>
         <attribute name="content" attributeType="String" defaultValueString=""/>
@@ -94,7 +94,7 @@
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
-    <entity name="CalendarEvent" representedClassName="CalendarEvent" syncable="YES">
+    <entity name="CalendarEvent" representedClassName="CalendarEvent" syncable="NO">
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="title" attributeType="String" defaultValueString=""/>
         <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -110,4 +110,44 @@
         <attribute name="todoEmoji" optional="YES" attributeType="String"/>
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
+    <entity name="TrustFinancialSummary" representedClassName="TrustFinancialSummary" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="contributorID" attributeType="String" defaultValueString=""/>
+        <attribute name="contributorName" attributeType="String" defaultValueString=""/>
+        <attribute name="yearMonth" attributeType="String" defaultValueString=""/>
+        <attribute name="totalInvoiced" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="totalPaid" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="totalOutstanding" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="invoiceCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="gstCollected" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="gstOnExpenses" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="totalExpenses" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="expensesByCategoryJSON" attributeType="String" defaultValueString="{}"/>
+        <attribute name="lastUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="TrustSettings" representedClassName="TrustSettings" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="trustName" attributeType="String" defaultValueString=""/>
+        <attribute name="trustABN" attributeType="String" defaultValueString=""/>
+        <attribute name="monthlyIncomeTarget" attributeType="Double" defaultValueString="20000" usesScalarValueType="YES"/>
+        <attribute name="estimatedTaxRate" attributeType="Double" defaultValueString="0.3" usesScalarValueType="YES"/>
+        <attribute name="basQuarterStartMonth" attributeType="Integer 16" defaultValueString="7" usesScalarValueType="YES"/>
+        <attribute name="lastUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedBy" attributeType="String" defaultValueString=""/>
+    </entity>
+    <configuration name="Local" defaultModelVersionIdentifier="">
+        <memberEntity name="BusinessProfile"/>
+        <memberEntity name="Invoice"/>
+        <memberEntity name="InvoiceLineItem"/>
+        <memberEntity name="Expense"/>
+        <memberEntity name="Client"/>
+        <memberEntity name="Milestone"/>
+        <memberEntity name="RoadmapTask"/>
+        <memberEntity name="TodoNote"/>
+        <memberEntity name="CalendarEvent"/>
+    </configuration>
+    <configuration name="Shared" defaultModelVersionIdentifier="">
+        <memberEntity name="TrustFinancialSummary"/>
+        <memberEntity name="TrustSettings"/>
+    </configuration>
 </model>

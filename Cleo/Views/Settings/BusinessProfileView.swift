@@ -1,10 +1,11 @@
 import SwiftUI
 import PhotosUI
 
-/// Business profile & settings screen (§8) — includes personalisation
+/// Business profile & settings screen — includes personalisation and trust settings
 struct BusinessProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var theme: ThemeManager
+    var trustSyncService: TrustSyncService
 
     @State private var businessName = ""
     @State private var appDisplayName = ""
@@ -27,6 +28,13 @@ struct BusinessProfileView: View {
     // Logo
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var logoImage: UIImage?
+
+    // Trust settings
+    @State private var trustName = ""
+    @State private var trustABN = ""
+    @State private var incomeTargetText = "20000"
+    @State private var taxRateText = "30"
+    @State private var showingShareSheet = false
 
     @State private var hasLoaded = false
     @State private var showResetConfirmation = false
@@ -113,6 +121,8 @@ struct BusinessProfileView: View {
                 TextField("PayID", text: $payID)
             }
 
+            trustSection
+
             Section("Invoice Defaults") {
                 Picker("Payment Terms", selection: $defaultPaymentTerms) {
                     ForEach(PaymentTerms.allCases, id: \.self) { term in
@@ -177,6 +187,55 @@ struct BusinessProfileView: View {
         .onAppear { loadProfile() }
     }
 
+    // MARK: - Trust Section
+
+    private var trustSection: some View {
+        Section("Trust") {
+            TextField("Trust Name", text: $trustName)
+                .autocorrectionDisabled()
+
+            TextField("Trust ABN", text: $trustABN)
+                .keyboardType(.numberPad)
+
+            HStack {
+                Text("Monthly Income Target")
+                Spacer()
+                Text("$")
+                    .foregroundStyle(.secondary)
+                TextField("20000", text: $incomeTargetText)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 80)
+            }
+
+            HStack {
+                Text("Est. Tax Rate")
+                Spacer()
+                TextField("30", text: $taxRateText)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 60)
+                Text("%")
+                    .foregroundStyle(.secondary)
+            }
+
+            if trustSyncService.isConnected {
+                Label("Partner connected", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            } else {
+                Button("Invite Partner") {
+                    showingShareSheet = true
+                }
+                .foregroundStyle(.blue)
+            }
+        }
+        .alert("Partner Sharing", isPresented: $showingShareSheet) {
+            Button("OK") {}
+        } message: {
+            Text("CloudKit sharing will be set up once both devices are running Cleo with iCloud sign-in. Use 'Invite Partner' from Settings → Trust once fully configured.")
+        }
+    }
+
     private func loadProfile() {
         guard !hasLoaded else { return }
         hasLoaded = true
@@ -200,6 +259,13 @@ struct BusinessProfileView: View {
         if let path = profile.logoImagePath {
             logoImage = UIImage(contentsOfFile: path)
         }
+
+        // Trust settings
+        let settings = trustSyncService.getOrCreateSettings()
+        trustName = settings.trustName
+        trustABN = settings.trustABN
+        incomeTargetText = String(format: "%.0f", settings.monthlyIncomeTarget)
+        taxRateText = String(format: "%.0f", settings.estimatedTaxRate * 100)
     }
 
     private func save() {
@@ -220,6 +286,16 @@ struct BusinessProfileView: View {
         // Update theme
         theme.appDisplayName = appDisplayName
         theme.saveToProfile(profile)
+
+        // Trust settings
+        let settings = trustSyncService.getOrCreateSettings()
+        settings.trustName = trustName
+        settings.trustABN = trustABN
+        settings.monthlyIncomeTarget = Double(incomeTargetText) ?? 20000
+        settings.estimatedTaxRate = (Double(taxRateText) ?? 30) / 100.0
+        settings.lastUpdated = Date()
+        settings.updatedBy = profile.id?.uuidString ?? ""
+        PersistenceController.shared.saveShared()
 
         PersistenceController.shared.save()
         dismiss()

@@ -11,13 +11,21 @@ struct MetricsTabView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
-                    // 1. Monthly Briefing
+                    // 1. Trust Briefing Card
                     monthlyBriefingCard
 
-                    // 2. Profit & Loss
+                    // 2. Income Gap Tracker (NEW)
+                    IncomeGapCard(aggregate: viewModel.trustAggregate)
+
+                    // 3. BAS / GST Card (NEW)
+                    if let bas = viewModel.basQuarter {
+                        BASQuarterCard(bas: bas)
+                    }
+
+                    // 4. Profit & Loss
                     profitLossCard
 
-                    // 3. Time Tracking
+                    // 5. Time Tracking
                     if !viewModel.weeks.isEmpty {
                         timeTrackingSection
                     }
@@ -48,37 +56,33 @@ struct MetricsTabView: View {
     // MARK: - Monthly Briefing Card
 
     private var monthlyBriefingCard: some View {
-        BriefingCardView(
+        let tags = viewModel.financialTagPills.map { BriefingCardView.StatPill(label: $0.label, value: $0.value) }
+        return BriefingCardView(
             badge: viewModel.currentMonthLabel,
             headline: viewModel.briefing?.headline ?? viewModel.fallbackHeadline,
             summary: viewModel.briefing?.summary ?? viewModel.fallbackSummary,
-            stats: financialTags,
+            stats: tags,
             accent: .metrics,
             isLoading: viewModel.isLoadingBriefing
         )
-    }
-
-    private var financialTags: [BriefingCardView.StatPill] {
-        var pills: [BriefingCardView.StatPill] = []
-        pills.append(.init(label: "Revenue", value: "$\(String(format: "%.0f", viewModel.monthlyRevenue))"))
-        pills.append(.init(label: "Expenses", value: "$\(String(format: "%.0f", viewModel.monthlyExpenses))"))
-        if let trend = viewModel.profitTrendPercent {
-            let arrow = trend >= 0 ? "↑" : "↓"
-            pills.append(.init(label: "", value: "\(arrow) \(Int(abs(trend)))% vs last"))
-        }
-        return pills
     }
 
     // MARK: - Profit & Loss Card
 
     private var profitLossCard: some View {
         VStack(spacing: 16) {
-            // Header
             HStack {
-                Text("PROFIT & LOSS")
-                    .font(.caption.bold())
-                    .foregroundStyle(.white.opacity(0.4))
-                    .tracking(1)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("PROFIT & LOSS")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white.opacity(0.4))
+                        .tracking(1)
+                    Text(viewModel.trustAggregate.isSoloMode
+                         ? "Your business — last 30 days"
+                         : "Combined trust — last 30 days")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.3))
+                }
                 Spacer()
                 Text("Last 30 days")
                     .font(.caption2.weight(.medium))
@@ -88,16 +92,13 @@ struct MetricsTabView: View {
                     .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
             }
 
-            // Hero profit number
             VStack(spacing: 4) {
                 Text("Net Profit")
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.5))
-
                 Text("$\(String(format: "%.0f", abs(viewModel.netProfit)))")
                     .font(.system(size: 32, weight: .bold))
                     .foregroundStyle(viewModel.netProfit >= 0 ? accent.color : .red)
-
                 if let trend = viewModel.profitTrendPercent {
                     let arrow = trend >= 0 ? "↑" : "↓"
                     Text("\(arrow) \(Int(abs(trend)))% vs previous period")
@@ -107,12 +108,10 @@ struct MetricsTabView: View {
             }
             .frame(maxWidth: .infinity)
 
-            // Revenue vs Expenses bars
             let maxVal = max(viewModel.monthlyRevenue, viewModel.monthlyExpenses, 1)
-
             VStack(spacing: 10) {
-                barRow(label: "Revenue", value: viewModel.monthlyRevenue, maxValue: maxVal, color: accent.color, isRevenue: true)
-                barRow(label: "Expenses", value: viewModel.monthlyExpenses, maxValue: maxVal, color: .red, isRevenue: false)
+                barRow(label: "Revenue",  value: viewModel.monthlyRevenue,  maxValue: maxVal, color: accent.color)
+                barRow(label: "Expenses", value: viewModel.monthlyExpenses, maxValue: maxVal, color: .red)
             }
         }
         .padding(18)
@@ -123,7 +122,7 @@ struct MetricsTabView: View {
         )
     }
 
-    private func barRow(label: String, value: Double, maxValue: Double, color: Color, isRevenue: Bool) -> some View {
+    private func barRow(label: String, value: Double, maxValue: Double, color: Color) -> some View {
         HStack(spacing: 10) {
             Text(label)
                 .font(.caption)
@@ -132,18 +131,9 @@ struct MetricsTabView: View {
 
             GeometryReader { geo in
                 let fillWidth = maxValue > 0 ? (value / maxValue) * geo.size.width : 0
-
                 ZStack(alignment: .leading) {
-                    // Track
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.white.opacity(0.04))
-
-                    // Fill
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(color.opacity(0.25))
-                        .frame(width: max(fillWidth, 0))
-
-                    // Amount label
+                    RoundedRectangle(cornerRadius: 8).fill(.white.opacity(0.04))
+                    RoundedRectangle(cornerRadius: 8).fill(color.opacity(0.25)).frame(width: max(fillWidth, 0))
                     Text("$\(String(format: "%.0f", value))")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(color)
@@ -164,15 +154,12 @@ struct MetricsTabView: View {
                 .tracking(1)
                 .padding(.top, 8)
 
-            // Week selector
             weekSelector
 
-            // Top Client card
             if let hero = viewModel.heroClient, let week = viewModel.selectedWeek {
                 topClientCard(hero: hero, week: week)
             }
 
-            // Hours by Client
             if let week = viewModel.selectedWeek, !week.clients.isEmpty {
                 hoursByClientCard(week: week)
             }
@@ -181,9 +168,7 @@ struct MetricsTabView: View {
 
     private var weekSelector: some View {
         HStack {
-            Button {
-                withAnimation { viewModel.goToPreviousWeek() }
-            } label: {
+            Button { withAnimation { viewModel.goToPreviousWeek() } } label: {
                 Image(systemName: "chevron.left")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(viewModel.canGoBack ? accent.color : .white.opacity(0.2))
@@ -200,9 +185,7 @@ struct MetricsTabView: View {
 
             Spacer()
 
-            Button {
-                withAnimation { viewModel.goToNextWeek() }
-            } label: {
+            Button { withAnimation { viewModel.goToNextWeek() } } label: {
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(viewModel.canGoForward ? accent.color : .white.opacity(0.2))
@@ -211,8 +194,6 @@ struct MetricsTabView: View {
         }
         .padding(.horizontal, 8)
     }
-
-    // MARK: - Top Client Card
 
     private func topClientCard(hero: ClientHours, week: WeekSummary) -> some View {
         VStack(spacing: 12) {
@@ -232,15 +213,13 @@ struct MetricsTabView: View {
 
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(hero.name)
-                        .font(.headline)
+                    Text(hero.name).font(.headline)
                     Text("\(hero.formattedHours) · \(viewModel.heroPercentage)% of your week")
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.5))
                 }
                 Spacer()
-                Text("🏆")
-                    .font(.system(size: 28))
+                Text("🏆").font(.system(size: 28))
             }
 
             HStack(spacing: 6) {
@@ -267,8 +246,6 @@ struct MetricsTabView: View {
             .padding(.vertical, 3)
             .background(accent.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
     }
-
-    // MARK: - Hours by Client
 
     private func hoursByClientCard(week: WeekSummary) -> some View {
         VStack(alignment: .leading, spacing: 8) {

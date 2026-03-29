@@ -5,7 +5,12 @@ struct CleoApp: App {
     let persistence = PersistenceController.shared
     let calendarService = DeviceCalendarService()
     let claudeService = ClaudeAPIService()
+    let trustSyncService: TrustSyncService
     @State private var theme = ThemeManager()
+
+    init() {
+        trustSyncService = TrustSyncService(persistence: PersistenceController.shared)
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -13,7 +18,8 @@ struct CleoApp: App {
                 calendarService: calendarService,
                 claudeService: claudeService,
                 persistence: persistence,
-                theme: theme
+                theme: theme,
+                trustSyncService: trustSyncService
             )
             .preferredColorScheme(.dark)
             .onAppear {
@@ -24,12 +30,15 @@ struct CleoApp: App {
             }
             .onOpenURL { url in
                 if url.scheme == "cleo" && url.host == "scan-receipt" {
-                    // Small delay to let the app finish launching/foregrounding
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         checkForSharedReceipt()
                     }
                 }
             }
+        }
+        // Handle incoming CloudKit share acceptance (wife accepting the trust share invite)
+        .commands {
+            // no-op — share acceptance is handled via UIApplicationDelegate
         }
     }
 
@@ -45,10 +54,8 @@ struct CleoApp: App {
 
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
 
-        // Clean up flag file
         try? FileManager.default.removeItem(at: flagURL)
 
-        // Post notification with the file URL for the main app to pick up
         NotificationCenter.default.post(
             name: .sharedReceiptAvailable,
             object: nil,

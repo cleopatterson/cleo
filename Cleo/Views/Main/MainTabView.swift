@@ -9,6 +9,7 @@ struct MainTabView: View {
     @Bindable var roadmapVM: RoadmapViewModel
     @Bindable var metricsVM: MetricsViewModel
     @Bindable var theme: ThemeManager
+    var trustSyncService: TrustSyncService { metricsVM.trustSyncService }
     @State private var selectedTab = 0
     @State private var showingProfile = false
 
@@ -46,7 +47,7 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $showingProfile) {
             NavigationStack {
-                BusinessProfileView(theme: theme)
+                BusinessProfileView(theme: theme, trustSyncService: trustSyncService)
             }
             .presentationDetents([.medium, .large])
             .presentationBackground(.ultraThinMaterial)

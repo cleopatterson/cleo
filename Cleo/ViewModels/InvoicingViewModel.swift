@@ -6,6 +6,7 @@ import CoreData
 class InvoicingViewModel {
     let context: NSManagedObjectContext
     let claudeService: ClaudeAPIService
+    let trustSyncService: TrustSyncService
 
     var invoices: [Invoice] = []
     var expenses: [Expense] = []
@@ -14,9 +15,12 @@ class InvoicingViewModel {
     var isLoadingBriefing = false
     @ObservationIgnored private var hasLoadedBriefing = false
 
-    init(context: NSManagedObjectContext, claudeService: ClaudeAPIService) {
+    init(context: NSManagedObjectContext,
+         claudeService: ClaudeAPIService,
+         trustSyncService: TrustSyncService) {
         self.context = context
         self.claudeService = claudeService
+        self.trustSyncService = trustSyncService
         fetchInvoices()
         fetchExpenses()
         fetchClients()
@@ -78,6 +82,17 @@ class InvoicingViewModel {
 
     // MARK: - CRUD
 
+    // MARK: - Trust Sync
+
+    private func pushTrustSummary() {
+        let profile = PersistenceController.shared.getOrCreateBusinessProfile()
+        Task {
+            await trustSyncService.pushSummary(invoices: invoices, expenses: expenses, profile: profile)
+        }
+    }
+
+    // MARK: - CRUD
+
     func createInvoice(clientName: String, clientEmail: String, paymentTerms: PaymentTerms, lineItems: [(description: String, quantity: Double, unitPrice: Double)]) -> Invoice {
         let invoice = Invoice(context: context)
         invoice.id = UUID()
@@ -102,6 +117,7 @@ class InvoicingViewModel {
 
         PersistenceController.shared.save()
         fetchInvoices()
+        pushTrustSummary()
         return invoice
     }
 
@@ -110,6 +126,7 @@ class InvoicingViewModel {
         invoice.sentDate = Date()
         PersistenceController.shared.save()
         fetchInvoices()
+        pushTrustSummary()
     }
 
     func markAsPaid(_ invoice: Invoice) {
@@ -117,18 +134,21 @@ class InvoicingViewModel {
         invoice.paidDate = Date()
         PersistenceController.shared.save()
         fetchInvoices()
+        pushTrustSummary()
     }
 
     func deleteInvoice(_ invoice: Invoice) {
         context.delete(invoice)
         PersistenceController.shared.save()
         fetchInvoices()
+        pushTrustSummary()
     }
 
     func deleteExpense(_ expense: Expense) {
         context.delete(expense)
         PersistenceController.shared.save()
         fetchExpenses()
+        pushTrustSummary()
     }
 
     func addExpense(amount: Double, category: ExpenseCategory, date: Date, note: String?) {
@@ -141,6 +161,7 @@ class InvoicingViewModel {
         expense.isRecurring = false
         PersistenceController.shared.save()
         fetchExpenses()
+        pushTrustSummary()
     }
 
     // MARK: - Quick Invoice

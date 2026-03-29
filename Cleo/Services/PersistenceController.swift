@@ -1,16 +1,54 @@
 import CoreData
+import CloudKit
 
-/// Core Data stack using NSPersistentCloudKitContainer for future CloudKit sync (§9.2)
+/// Core Data stack using NSPersistentCloudKitContainer.
+///
+/// Two stores:
+///   - "Local" config   → Cleo-Local.sqlite, no CloudKit sync (invoices, expenses, etc.)
+///   - "Shared" config  → Cleo-Shared.sqlite, CloudKit shared zone (TrustFinancialSummary, TrustSettings)
 struct PersistenceController {
     static let shared = PersistenceController()
 
     let container: NSPersistentCloudKitContainer
 
+    /// Main context for local entities (invoices, expenses, clients, etc.)
+    var viewContext: NSManagedObjectContext { container.viewContext }
+
+    /// Context for shared trust entities — currently same viewContext since both stores
+    /// are loaded into the same container. Access is configuration-separated by entity assignment.
+    var sharedContext: NSManagedObjectContext { container.viewContext }
+
     init(inMemory: Bool = false) {
         container = NSPersistentCloudKitContainer(name: "Cleo")
 
+        let baseURL = NSPersistentContainer.defaultDirectoryURL()
+
         if inMemory {
-            container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
+            let localDesc = NSPersistentStoreDescription()
+            localDesc.configuration = "Local"
+            localDesc.type = NSInMemoryStoreType
+            localDesc.url = URL(fileURLWithPath: "/dev/null/local")
+
+            let sharedDesc = NSPersistentStoreDescription()
+            sharedDesc.configuration = "Shared"
+            sharedDesc.type = NSInMemoryStoreType
+            sharedDesc.url = URL(fileURLWithPath: "/dev/null/shared")
+
+            container.persistentStoreDescriptions = [localDesc, sharedDesc]
+        } else {
+            // Local store — existing entities, no CloudKit
+            let localDesc = NSPersistentStoreDescription(url: baseURL.appendingPathComponent("Cleo-Local.sqlite"))
+            localDesc.configuration = "Local"
+            localDesc.cloudKitContainerOptions = nil
+
+            // Shared store — trust entities, CloudKit shared zone
+            let sharedDesc = NSPersistentStoreDescription(url: baseURL.appendingPathComponent("Cleo-Shared.sqlite"))
+            sharedDesc.configuration = "Shared"
+            let sharedOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.wallboard.cleo")
+            sharedOptions.databaseScope = .shared
+            sharedDesc.cloudKitContainerOptions = sharedOptions
+
+            container.persistentStoreDescriptions = [localDesc, sharedDesc]
         }
 
         container.loadPersistentStores { _, error in
@@ -23,8 +61,18 @@ struct PersistenceController {
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
     }
 
-    var viewContext: NSManagedObjectContext {
-        container.viewContext
+    func save() {
+        let ctx = container.viewContext
+        guard ctx.hasChanges else { return }
+        do {
+            try ctx.save()
+        } catch {
+            print("Core Data save error: \(error.localizedDescription)")
+        }
+    }
+
+    func saveShared() {
+        save()  // Both stores share the same viewContext
     }
 
     // MARK: - Business Profile (singleton)
@@ -51,7 +99,7 @@ struct PersistenceController {
         return profile
     }
 
-    // MARK: - Invoice Number Generation (§4.3)
+    // MARK: - Invoice Number Generation
 
     func nextInvoiceNumber() -> String {
         let profile = getOrCreateBusinessProfile()
@@ -67,15 +115,6 @@ struct PersistenceController {
         let profile = getOrCreateBusinessProfile()
         profile.nextInvoiceSequence = value
         save()
-    }
-
-    func save() {
-        guard viewContext.hasChanges else { return }
-        do {
-            try viewContext.save()
-        } catch {
-            print("Core Data save error: \(error.localizedDescription)")
-        }
     }
 
     // MARK: - Calendar Events
