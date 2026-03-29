@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cleo — Metrics Tab (Final)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+  :root {
+    --bg-deep: #0d1117;
+    --bg-card: #151b23;
+    --bg-input: #1a2230;
+    --border: #252d3a;
+    --border-light: #1e2636;
+    --teal: #3ecf9a;
+    --teal-dim: rgba(62, 207, 154, 0.12);
+    --text-primary: #e8ecf1;
+    --text-secondary: #8893a4;
+    --text-muted: #555f6e;
+    --amber: #f0a946;
+    --amber-dim: rgba(240, 169, 70, 0.12);
+    --red: #f0465a;
+    --red-dim: rgba(240, 70, 90, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: #08090c;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  .phone {
+    width: 390px; height: 844px; background: var(--bg-deep); border-radius: 44px;
+    border: 3px solid #1a1a1e; overflow: hidden; position: relative;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+
+  .phone-screen { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .phone-screen::-webkit-scrollbar { display: none; }
+
+  .status-bar { height: 54px; position: sticky; top: 0; background: var(--bg-deep); z-index: 10; }
+  .notch { width: 126px; height: 34px; background: #000; border-radius: 0 0 20px 20px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 4px 20px 12px; position: sticky; top: 54px; background: var(--bg-deep); z-index: 9; }
+  .nav-title { font-size: 17px; font-weight: 600; }
+  .nav-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border); background: transparent; color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+
+  .content { padding: 0 16px 100px; }
+
+  /* Briefing card — month label */
+  .briefing-card {
+    background: linear-gradient(135deg, rgba(62,207,154,0.1), rgba(62,207,154,0.03));
+    border: 1px solid rgba(62,207,154,0.18); border-radius: 18px; padding: 18px; margin-bottom: 12px;
+  }
+
+  .briefing-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--teal); margin-bottom: 8px; }
+  .briefing-card h2 { font-size: 19px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .briefing-card .sub { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
+  .briefing-tags { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .briefing-tag { font-size: 12px; padding: 4px 10px; border-radius: 8px; background: var(--teal-dim); color: var(--teal); font-weight: 500; }
+
+  /* Finance card */
+  .finance-card {
+    background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 18px;
+    padding: 18px; margin-bottom: 12px;
+  }
+
+  .finance-card .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .finance-card .card-header .title { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
+  .finance-card .card-header .period-badge { font-size: 11px; color: var(--text-muted); background: var(--bg-input); padding: 3px 8px; border-radius: 6px; font-weight: 500; }
+
+  .profit-hero { text-align: center; margin-bottom: 18px; }
+  .profit-hero .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+  .profit-hero .amount { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
+  .profit-hero .amount.positive { color: var(--teal); }
+  .profit-hero .trend { font-size: 12px; color: var(--teal); margin-top: 4px; font-weight: 500; }
+
+  .bar-compare { margin-bottom: 4px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-row .bar-label { font-size: 12px; color: var(--text-secondary); width: 70px; flex-shrink: 0; }
+  .bar-row .bar-track { flex: 1; height: 28px; background: var(--bg-input); border-radius: 8px; overflow: hidden; }
+  .bar-row .bar-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; padding-left: 10px; font-size: 12px; font-weight: 600; }
+  .bar-row .bar-fill.revenue { background: rgba(62, 207, 154, 0.25); color: var(--teal); }
+  .bar-row .bar-fill.expense { background: rgba(240, 70, 90, 0.25); color: var(--red); }
+
+  /* Section label */
+  .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); margin: 20px 0 10px; }
+
+  /* Time tracking */
+  .time-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 18px; padding: 18px; margin-bottom: 12px; }
+  .time-card .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .time-card .card-header .title { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
+  .time-card .card-header .period-badge { font-size: 11px; color: var(--text-muted); background: var(--bg-input); padding: 3px 8px; border-radius: 6px; font-weight: 500; }
+
+  .top-client-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .top-client-row .info h3 { font-size: 17px; font-weight: 600; }
+  .top-client-row .info p { font-size: 13px; color: var(--text-secondary); }
+  .top-client-row .trophy { font-size: 28px; }
+
+  .time-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .time-tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: var(--teal-dim); color: var(--teal); font-weight: 500; }
+
+  .client-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .client-bar-row .cl-name { font-size: 12px; color: var(--text-secondary); width: 90px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .client-bar-row .cl-track { flex: 1; height: 18px; background: var(--bg-input); border-radius: 5px; overflow: hidden; }
+  .client-bar-row .cl-fill { height: 100%; background: rgba(62,207,154,0.35); border-radius: 5px; }
+  .client-bar-row .cl-val { font-size: 12px; color: var(--text-secondary); width: 40px; text-align: right; flex-shrink: 0; }
+
+  /* Tab bar */
+  .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 82px; background: linear-gradient(to top, var(--bg-deep) 70%, transparent); display: flex; align-items: flex-start; justify-content: space-around; padding-top: 10px; z-index: 10; }
+  .tab-item { display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 0.45; }
+  .tab-item.active { opacity: 1; }
+  .tab-item .tab-icon { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 7px; }
+  .tab-item.active .tab-icon { background: var(--teal); color: var(--bg-deep); font-weight: 700; }
+  .tab-item span { font-size: 10px; color: var(--text-secondary); }
+  .tab-item.active span { color: var(--teal); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="phone-screen">
+    <div class="status-bar"><div class="notch"></div></div>
+    <div class="nav"><div class="nav-btn">👤</div><span class="nav-title">Metrics</span><div class="nav-btn" style="opacity:0">+</div></div>
+    <div class="content">
+
+      <!-- Briefing — month callout -->
+      <div class="briefing-card">
+        <div class="briefing-label">✦ March 2026</div>
+        <h2>$26,468 profit this month</h2>
+        <div class="sub">Revenue up 34% vs last 30 days. Expenses steady. Service Seeking is your top earner.</div>
+        <div class="briefing-tags">
+          <span class="briefing-tag">Revenue: $33,668</span>
+          <span class="briefing-tag">Expenses: $7,200</span>
+          <span class="briefing-tag">↑ 34% vs last</span>
+        </div>
+      </div>
+
+      <!-- P&L card -->
+      <div class="finance-card">
+        <div class="card-header">
+          <span class="title">Profit & Loss</span>
+          <span class="period-badge">Last 30 days</span>
+        </div>
+
+        <div class="profit-hero">
+          <div class="label">Net Profit</div>
+          <div class="amount positive">$26,468</div>
+          <div class="trend">↑ 34% vs previous period</div>
+        </div>
+
+        <div class="bar-compare">
+          <div class="bar-row">
+            <span class="bar-label">Revenue</span>
+            <div class="bar-track"><div class="bar-fill revenue" style="width: 82%;">$33,668</div></div>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Expenses</span>
+            <div class="bar-track"><div class="bar-fill expense" style="width: 18%;">$7,200</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time tracking -->
+      <div class="section-label">Time Tracking</div>
+
+      <div class="time-card">
+        <div class="card-header">
+          <span class="title">Top Client</span>
+          <span class="period-badge">9 – 15 Mar</span>
+        </div>
+        <div class="top-client-row">
+          <div class="info"><h3>Trade Onboarding</h3><p>7.7h · 40% of your week</p></div>
+          <div class="trophy">🏆</div>
+        </div>
+        <div class="time-tags">
+          <span class="time-tag">74 sessions</span>
+          <span class="time-tag">19.2h total</span>
+          <span class="time-tag">+4700% vs last</span>
+        </div>
+      </div>
+
+      <div class="section-label">Hours by Client</div>
+      <div class="time-card" style="padding: 14px 16px;">
+        <div class="client-bar-row"><span class="cl-name">Trade Onboarding</span><div class="cl-track"><div class="cl-fill" style="width: 100%;"></div></div><span class="cl-val">7.7h</span></div>
+        <div class="client-bar-row"><span class="cl-name">Wilko</span><div class="cl-track"><div class="cl-fill" style="width: 61%;"></div></div><span class="cl-val">4.7h</span></div>
+        <div class="client-bar-row"><span class="cl-name">Choo</span><div class="cl-track"><div class="cl-fill" style="width: 31%;"></div></div><span class="cl-val">2.4h</span></div>
+        <div class="client-bar-row"><span class="cl-name">Mindplan</span><div class="cl-track"><div class="cl-fill" style="width: 30%;"></div></div><span class="cl-val">2.3h</span></div>
+        <div class="client-bar-row"><span class="cl-name">Cleo</span><div class="cl-track"><div class="cl-fill" style="width: 12%;"></div></div><span class="cl-val">54m</span></div>
+        <div class="client-bar-row"><span class="cl-name">Zombie</span><div class="cl-track"><div class="cl-fill" style="width: 12%;"></div></div><span class="cl-val">54m</span></div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab-item"><div class="tab-icon">📅</div><span>Calendar</span></div>
+      <div class="tab-item"><div class="tab-icon">$</div><span>Money</span></div>
+      <div class="tab-item"><div class="tab-icon">☐</div><span>To Do</span></div>
+      <div class="tab-item"><div class="tab-icon">▸</div><span>Roadmap</span></div>
+      <div class="tab-item active"><div class="tab-icon">⊞</div><span>Metrics</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

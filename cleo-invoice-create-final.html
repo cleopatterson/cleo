@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cleo — New Invoice/Expense (Final)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+  :root {
+    --bg-deep: #0d1117;
+    --bg-card: #151b23;
+    --bg-input: #1a2230;
+    --border: #252d3a;
+    --border-light: #1e2636;
+    --teal: #3ecf9a;
+    --teal-dim: rgba(62, 207, 154, 0.12);
+    --text-primary: #e8ecf1;
+    --text-secondary: #8893a4;
+    --text-muted: #555f6e;
+    --amber: #f0a946;
+    --amber-dim: rgba(240, 169, 70, 0.12);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167, 139, 250, 0.12);
+    --red: #f0465a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: #08090c;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px 16px;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .phone-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .phone-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+  .phone-label.teal { color: var(--teal); }
+
+  .phone { width: 390px; height: 844px; background: var(--bg-deep); border-radius: 44px; border: 3px solid #1a1a1e; overflow: hidden; position: relative; box-shadow: 0 20px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03); }
+  .phone-screen { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .phone-screen::-webkit-scrollbar { display: none; }
+
+  .status-bar { height: 54px; position: sticky; top: 0; background: var(--bg-deep); z-index: 10; }
+  .notch { width: 126px; height: 34px; background: #000; border-radius: 0 0 20px 20px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 4px 20px 12px; position: sticky; top: 54px; background: var(--bg-deep); z-index: 9; }
+  .nav-title { font-size: 17px; font-weight: 600; }
+  .nav-text-btn { font-size: 15px; font-weight: 500; color: var(--teal); background: none; border: none; font-family: inherit; cursor: pointer; padding: 4px 0; }
+
+  .content { padding: 0 16px 40px; }
+
+  .toggle-wrap { background: var(--bg-input); border: 1px solid var(--border-light); border-radius: 12px; display: flex; padding: 3px; margin-bottom: 20px; }
+  .toggle-btn { flex: 1; padding: 9px 0; border: none; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--text-muted); }
+  .toggle-btn.active { background: var(--teal); color: var(--bg-deep); font-weight: 600; }
+
+  .client-section { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+
+  .client-select { width: 100%; background: var(--bg-input); border: 1px solid var(--border-light); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: border-color 0.15s; }
+  .client-select:hover { border-color: var(--teal); }
+  .client-select .icon { width: 28px; height: 28px; border-radius: 7px; background: var(--teal-dim); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .client-select .placeholder { font-size: 14px; color: var(--text-muted); flex: 1; }
+  .client-select .chevron { color: var(--text-muted); font-size: 14px; }
+
+  .recent-clients { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .recent-chip { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .recent-chip:hover { border-color: var(--teal); background: rgba(62,207,154,0.03); }
+  .recent-chip .mini-av { width: 20px; height: 20px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; }
+  .recent-chip .chip-name { font-size: 12px; color: var(--text-secondary); }
+
+  .c1 { background: var(--teal-dim) !important; color: var(--teal) !important; }
+  .c2 { background: var(--amber-dim) !important; color: var(--amber) !important; }
+  .c3 { background: var(--purple-dim) !important; color: var(--purple) !important; }
+
+  .form-divider { height: 1px; background: var(--border-light); margin: 16px 0; }
+  .form-group { margin-bottom: 12px; }
+  .form-input { width: 100%; background: var(--bg-input); border: 1px solid var(--border-light); border-radius: 10px; padding: 11px 14px; font-size: 14px; color: var(--text-primary); font-family: inherit; outline: none; transition: border-color 0.15s; }
+  .form-input:focus { border-color: var(--teal); }
+  .form-input::placeholder { color: var(--text-muted); }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-group { flex: 1; }
+
+  .line-item-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  .line-item-top { display: flex; align-items: center; gap: 8px; }
+  .line-item-top .desc-input { flex: 1; background: transparent; border: none; font-size: 14px; color: var(--text-primary); font-family: inherit; outline: none; padding: 0; }
+  .line-item-top .desc-input::placeholder { color: var(--text-muted); }
+  .line-item-top .remove-btn { width: 22px; height: 22px; border-radius: 6px; border: none; background: rgba(240,70,90,0.1); color: var(--red); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: opacity 0.15s; }
+  .line-item-top .remove-btn:hover { opacity: 1; }
+
+  .line-item-bottom { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-light); }
+  .line-item-bottom .mini-input { background: var(--bg-input); border: 1px solid var(--border-light); border-radius: 7px; padding: 6px 8px; font-size: 13px; color: var(--text-primary); font-family: inherit; outline: none; transition: border-color 0.15s; text-align: center; }
+  .line-item-bottom .mini-input:focus { border-color: var(--teal); }
+  .line-item-bottom .qty-input { width: 44px; }
+  .line-item-bottom .price-input { width: 80px; text-align: right; }
+  .line-item-bottom .times { color: var(--text-muted); font-size: 12px; }
+  .line-item-bottom .line-total { font-size: 14px; font-weight: 600; color: var(--teal); margin-left: auto; }
+
+  .add-line-btn { width: 100%; padding: 9px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: transparent; color: var(--teal); font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.15s; margin-bottom: 14px; }
+  .add-line-btn:hover { border-color: var(--teal); background: var(--teal-dim); }
+
+  .totals { background: var(--bg-card); border-radius: 12px; padding: 12px 14px; margin-bottom: 18px; }
+  .total-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 13px; color: var(--text-secondary); }
+  .total-row.grand { font-size: 16px; font-weight: 600; color: var(--text-primary); border-top: 1px solid var(--border-light); margin-top: 6px; padding-top: 8px; }
+  .total-row.grand .val { color: var(--teal); }
+
+  .actions { display: flex; flex-direction: column; gap: 8px; }
+  .btn-primary { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--teal); color: var(--bg-deep); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-secondary { flex: 1; padding: 12px; border: 1.5px solid var(--border-light); border-radius: 12px; background: transparent; color: var(--text-primary); font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s; }
+  .btn-secondary:hover { border-color: var(--teal); background: var(--teal-dim); }
+
+  /* Smart banner for pre-filled state */
+  .smart-banner { background: var(--teal-dim); border: 1px solid rgba(62,207,154,0.2); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--teal); display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+
+  .quick-flow-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .quick-flow-header .avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
+  .quick-flow-header .info h2 { font-size: 17px; font-weight: 600; letter-spacing: -0.2px; }
+  .quick-flow-header .info p { font-size: 13px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<!-- PHONE 1: Empty state from + button -->
+<div class="phone-col">
+  <div class="phone-label">From "+" button (empty)</div>
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar"><div class="notch"></div></div>
+      <div class="nav">
+        <button class="nav-text-btn">Cancel</button>
+        <span class="nav-title">New</span>
+        <span style="width: 50px;"></span>
+      </div>
+      <div class="content">
+        <div class="toggle-wrap">
+          <button class="toggle-btn active">Invoice</button>
+          <button class="toggle-btn">Expense</button>
+        </div>
+
+        <div class="client-section">
+          <label class="form-label">Client</label>
+          <div class="client-select">
+            <div class="icon">👤</div>
+            <span class="placeholder">Select or add client</span>
+            <span class="chevron">›</span>
+          </div>
+          <div class="recent-clients">
+            <div class="recent-chip"><div class="mini-av c1">SS</div><span class="chip-name">Service Seeking</span></div>
+            <div class="recent-chip"><div class="mini-av c2">AP</div><span class="chip-name">Airtasker</span></div>
+            <div class="recent-chip"><div class="mini-av c3">HC</div><span class="chip-name">Hipages</span></div>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" value="INV-2026-0004" readonly style="color: var(--teal); font-weight: 500;"></div>
+          <div class="form-group"><label class="form-label">Terms</label><input class="form-input" value="Net 14" style="text-align: center;" readonly></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Date</label><input class="form-input" value="17 Mar 2026" readonly></div>
+          <div class="form-group"><label class="form-label">Due</label><input class="form-input" value="31 Mar 2026" readonly></div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <label class="form-label">Line Items</label>
+        <div class="line-item-card">
+          <div class="line-item-top"><input class="desc-input" placeholder="Description"><button class="remove-btn">×</button></div>
+          <div class="line-item-bottom">
+            <input class="mini-input qty-input" value="1" placeholder="Qty">
+            <span class="times">×</span>
+            <input class="mini-input price-input" placeholder="$0.00">
+            <span class="line-total">$0.00</span>
+          </div>
+        </div>
+        <button class="add-line-btn">+ Add Line Item</button>
+
+        <div class="totals">
+          <div class="total-row"><span>Subtotal</span><span>$0.00</span></div>
+          <div class="total-row"><span>GST (10%)</span><span>$0.00</span></div>
+          <div class="total-row grand"><span>Total</span><span class="val">$0.00</span></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary">✉ Preview & Send</button>
+          <div class="btn-row"><button class="btn-secondary">💾 Draft</button><button class="btn-secondary">📄 PDF</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PHONE 2: Pre-filled from Quick Invoice card -->
+<div class="phone-col">
+  <div class="phone-label teal">From Quick Invoice card (pre-filled)</div>
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="status-bar"><div class="notch"></div></div>
+      <div class="nav">
+        <button class="nav-text-btn">Cancel</button>
+        <span class="nav-title">New Invoice</span>
+        <span style="width: 50px;"></span>
+      </div>
+      <div class="content">
+        <div class="toggle-wrap">
+          <button class="toggle-btn active">Invoice</button>
+          <button class="toggle-btn">Expense</button>
+        </div>
+
+        <div class="quick-flow-header">
+          <div class="avatar c1">SS</div>
+          <div class="info">
+            <h2>Service Seeking</h2>
+            <p>invoices@serviceseeking.com.au</p>
+          </div>
+        </div>
+
+        <div class="smart-banner">✦ Pre-filled from your last invoice</div>
+
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Invoice #</label><input class="form-input" value="INV-2026-0004" readonly style="color: var(--teal); font-weight: 500;"></div>
+          <div class="form-group"><label class="form-label">Terms</label><input class="form-input" value="Net 14" style="text-align: center;" readonly></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Date</label><input class="form-input" value="17 Mar 2026" readonly></div>
+          <div class="form-group"><label class="form-label">Due</label><input class="form-input" value="31 Mar 2026" readonly></div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <label class="form-label">Line Items</label>
+        <div class="line-item-card">
+          <div class="line-item-top"><input class="desc-input" value="Software"><button class="remove-btn">×</button></div>
+          <div class="line-item-bottom">
+            <input class="mini-input qty-input" value="1">
+            <span class="times">×</span>
+            <input class="mini-input price-input" value="$200.00">
+            <span class="line-total">$200.00</span>
+          </div>
+        </div>
+        <button class="add-line-btn">+ Add Line Item</button>
+
+        <div class="totals">
+          <div class="total-row"><span>Subtotal</span><span>$200.00</span></div>
+          <div class="total-row"><span>GST (10%)</span><span>$20.00</span></div>
+          <div class="total-row grand"><span>Total</span><span class="val">$220.00</span></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary">✉ Preview & Send — $220.00</button>
+          <div class="btn-row"><button class="btn-secondary">💾 Draft</button><button class="btn-secondary">📄 PDF</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

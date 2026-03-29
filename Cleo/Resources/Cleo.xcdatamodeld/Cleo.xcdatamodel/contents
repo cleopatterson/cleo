@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="24D5034f" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" usedWithSwiftData="NO" userDefinedModelVersionIdentifier="">
+    <entity name="BusinessProfile" representedClassName="BusinessProfile" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="businessName" attributeType="String" defaultValueString=""/>
+        <attribute name="abn" optional="YES" attributeType="String"/>
+        <attribute name="address" optional="YES" attributeType="String"/>
+        <attribute name="email" optional="YES" attributeType="String"/>
+        <attribute name="phone" optional="YES" attributeType="String"/>
+        <attribute name="logoImagePath" optional="YES" attributeType="String"/>
+        <attribute name="appDisplayName" attributeType="String" defaultValueString=""/>
+        <attribute name="brandAccentHex" attributeType="String" defaultValueString="#4CAE8D"/>
+        <attribute name="isOnboarded" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="bankName" optional="YES" attributeType="String"/>
+        <attribute name="bsb" optional="YES" attributeType="String"/>
+        <attribute name="accountNumber" optional="YES" attributeType="String"/>
+        <attribute name="payID" optional="YES" attributeType="String"/>
+        <attribute name="defaultTaxRate" attributeType="Double" defaultValueString="0.1" usesScalarValueType="YES"/>
+        <attribute name="defaultPaymentTermsDays" attributeType="Integer 16" defaultValueString="14" usesScalarValueType="YES"/>
+        <attribute name="invoicePrefix" attributeType="String" defaultValueString="INV"/>
+        <attribute name="nextInvoiceSequence" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Invoice" representedClassName="Invoice" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="invoiceNumber" attributeType="String" defaultValueString=""/>
+        <attribute name="clientName" attributeType="String" defaultValueString=""/>
+        <attribute name="clientEmail" attributeType="String" defaultValueString=""/>
+        <attribute name="clientAddress" optional="YES" attributeType="String"/>
+        <attribute name="issueDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dueDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="paymentTermsDays" attributeType="Integer 16" defaultValueString="14" usesScalarValueType="YES"/>
+        <attribute name="statusRaw" attributeType="String" defaultValueString="draft"/>
+        <attribute name="sentDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="paidDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="taxRate" attributeType="Double" defaultValueString="0.1" usesScalarValueType="YES"/>
+        <attribute name="pdfData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <relationship name="lineItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="InvoiceLineItem" inverseName="invoice" inverseEntity="InvoiceLineItem"/>
+    </entity>
+    <entity name="InvoiceLineItem" representedClassName="InvoiceLineItem" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="itemDescription" attributeType="String" defaultValueString=""/>
+        <attribute name="quantity" attributeType="Double" defaultValueString="1" usesScalarValueType="YES"/>
+        <attribute name="unitPrice" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="invoice" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Invoice" inverseName="lineItems" inverseEntity="Invoice"/>
+    </entity>
+    <entity name="Expense" representedClassName="Expense" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="amount" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="categoryRaw" attributeType="String" defaultValueString="Other"/>
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="note" optional="YES" attributeType="String"/>
+        <attribute name="receiptImagePath" optional="YES" attributeType="String"/>
+        <attribute name="isRecurring" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Client" representedClassName="Client" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" defaultValueString=""/>
+        <attribute name="email" attributeType="String" defaultValueString=""/>
+        <attribute name="phone" optional="YES" attributeType="String"/>
+        <attribute name="address" optional="YES" attributeType="String"/>
+        <attribute name="defaultPaymentTermsDays" attributeType="Integer 16" defaultValueString="14" usesScalarValueType="YES"/>
+        <attribute name="isPinned" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Milestone" representedClassName="Milestone" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String" defaultValueString=""/>
+        <attribute name="emoji" attributeType="String" defaultValueString="&#x1F3AF;"/>
+        <attribute name="targetDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="statusRaw" attributeType="String" defaultValueString="planning"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="tasks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="RoadmapTask" inverseName="milestone" inverseEntity="RoadmapTask"/>
+    </entity>
+    <entity name="RoadmapTask" representedClassName="RoadmapTask" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String" defaultValueString=""/>
+        <attribute name="statusRaw" attributeType="String" defaultValueString="backlog"/>
+        <attribute name="priorityRaw" attributeType="String" defaultValueString="medium"/>
+        <attribute name="dueDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="assignee" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="isBlocked" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="blockedReason" optional="YES" attributeType="String"/>
+        <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="milestone" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Milestone" inverseName="tasks" inverseEntity="Milestone"/>
+    </entity>
+    <entity name="TodoNote" representedClassName="TodoNote" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String" defaultValueString=""/>
+        <attribute name="content" attributeType="String" defaultValueString=""/>
+        <attribute name="isList" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="CalendarEvent" representedClassName="CalendarEvent" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String" defaultValueString=""/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="isAllDay" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="recurrenceFrequencyRaw" optional="YES" attributeType="String"/>
+        <attribute name="recurrenceEndDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="reminderEnabled" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isTodo" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isCompleted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="completedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="todoEmoji" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+</model>

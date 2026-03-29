@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="g1" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#B2F0E4" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#A0E8D8" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="white" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#8CE0CC" stop-opacity="1"/>
+    </linearGradient>
+    <!-- Subtle shadow filter -->
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#006B5A" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Background: Cleo teal #00b894 -->
+  <rect width="1024" height="1024" fill="#00b894"/>
+
+  <!-- Large triangle (bottom-left, pointing up) -->
+  <polygon points="100,820 400,280 700,820" fill="url(#g1)" filter="url(#shadow)"/>
+
+  <!-- Medium triangle (top-right, pointing up) -->
+  <polygon points="520,560 700,180 880,560" fill="url(#g2)" filter="url(#shadow)"/>
+
+  <!-- Small triangle (top-center, pointing up) -->
+  <polygon points="380,280 470,100 560,280" fill="url(#g2)" filter="url(#shadow)"/>
+
+  <!-- Tiny triangle (bottom-right) -->
+  <polygon points="720,800 790,660 860,800" fill="url(#g3)" filter="url(#shadow)"/>
+</svg>

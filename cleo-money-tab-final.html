@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cleo — Money Tab (Final)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+  :root {
+    --bg-deep: #0d1117;
+    --bg-card: #151b23;
+    --border: #252d3a;
+    --border-light: #1e2636;
+    --teal: #3ecf9a;
+    --teal-dim: rgba(62, 207, 154, 0.12);
+    --text-primary: #e8ecf1;
+    --text-secondary: #8893a4;
+    --text-muted: #555f6e;
+    --amber: #f0a946;
+    --amber-dim: rgba(240, 169, 70, 0.12);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167, 139, 250, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: #08090c;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+
+  .phone {
+    width: 390px; height: 844px; background: var(--bg-deep); border-radius: 44px;
+    border: 3px solid #1a1a1e; overflow: hidden; position: relative;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+  }
+
+  .phone-screen { width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+  .phone-screen::-webkit-scrollbar { display: none; }
+
+  .status-bar { height: 54px; position: sticky; top: 0; background: var(--bg-deep); z-index: 10; }
+  .notch { width: 126px; height: 34px; background: #000; border-radius: 0 0 20px 20px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 4px 20px 12px; position: sticky; top: 54px; background: var(--bg-deep); z-index: 9; }
+  .nav-title { font-size: 17px; font-weight: 600; }
+  .nav-btn { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border); background: transparent; color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .nav-btn.teal { border-color: var(--teal); background: var(--teal-dim); color: var(--teal); }
+
+  .content { padding: 0 16px 100px; }
+
+  .briefing-card { background: linear-gradient(135deg, rgba(62,207,154,0.1), rgba(62,207,154,0.03)); border: 1px solid rgba(62,207,154,0.18); border-radius: 18px; padding: 18px; margin-bottom: 12px; }
+  .briefing-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--teal); margin-bottom: 8px; }
+  .briefing-card h2 { font-size: 19px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .briefing-card .sub { font-size: 13px; color: var(--text-secondary); }
+  .briefing-tags { display: flex; gap: 8px; margin-top: 12px; }
+  .briefing-tag { font-size: 12px; padding: 4px 10px; border-radius: 8px; background: var(--teal-dim); color: var(--teal); font-weight: 500; }
+
+  .qi-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; margin-top: 4px; }
+  .qi-header .label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
+  .qi-header a { font-size: 12px; color: var(--teal); text-decoration: none; cursor: pointer; }
+
+  .scroll-row { display: flex; gap: 10px; overflow-x: auto; margin: 0 -16px; padding: 0 16px 8px; scrollbar-width: none; }
+  .scroll-row::-webkit-scrollbar { display: none; }
+
+  .card { min-width: 156px; max-width: 156px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 14px; padding: 14px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+  .card:hover { border-color: var(--teal); background: rgba(62,207,154,0.03); }
+  .card .top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .card .top .av { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; position: relative; }
+  .card .top .av .pin { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); position: absolute; top: -2px; right: -2px; }
+  .c1 { background: var(--teal-dim) !important; color: var(--teal) !important; }
+  .c2 { background: var(--amber-dim) !important; color: var(--amber) !important; }
+  .c3 { background: var(--purple-dim) !important; color: var(--purple) !important; }
+  .card .top .nm { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card .amt { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 2px; }
+  .card .meta { font-size: 11px; color: var(--text-muted); }
+  .card .nudge { font-size: 10px; color: var(--teal); margin-top: 6px; font-weight: 500; }
+
+  .card.add-card { min-width: 100px; max-width: 100px; border-style: dashed; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .card.add-card .plus { width: 30px; height: 30px; border: 1.5px dashed var(--text-muted); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 16px; margin-bottom: 6px; }
+  .card.add-card .add-label { font-size: 11px; color: var(--text-muted); }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; }
+  .section-header h3 { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-secondary); }
+
+  .invoice-item { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--border-light); }
+  .invoice-item:last-child { border-bottom: none; }
+  .invoice-left .name { font-size: 15px; font-weight: 500; }
+  .invoice-left .number { font-size: 12px; color: var(--text-muted); }
+  .invoice-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .invoice-right .amount { font-size: 15px; font-weight: 600; }
+  .status-badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 6px; }
+  .status-badge.draft { background: var(--amber-dim); color: var(--amber); }
+  .status-badge.sent { background: var(--teal-dim); color: var(--teal); }
+
+  .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 82px; background: linear-gradient(to top, var(--bg-deep) 70%, transparent); display: flex; align-items: flex-start; justify-content: space-around; padding-top: 10px; z-index: 10; }
+  .tab-item { display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 0.45; }
+  .tab-item.active { opacity: 1; }
+  .tab-item .tab-icon { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: 7px; }
+  .tab-item.active .tab-icon { background: var(--teal); color: var(--bg-deep); font-weight: 700; }
+  .tab-item span { font-size: 10px; color: var(--text-secondary); }
+  .tab-item.active span { color: var(--teal); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="phone-screen">
+    <div class="status-bar"><div class="notch"></div></div>
+    <div class="nav"><div class="nav-btn">👤</div><span class="nav-title">Money</span><div class="nav-btn teal">+</div></div>
+    <div class="content">
+      <div class="briefing-card">
+        <div class="briefing-label">✦ AI Briefing</div>
+        <h2>2 invoices, $33,668 outstanding</h2>
+        <div class="sub">Service Seeking monthly is due. Both drafts need sending.</div>
+        <div class="briefing-tags"><span class="briefing-tag">Revenue: $0</span><span class="briefing-tag">Outstanding: $33,668</span></div>
+      </div>
+
+      <div class="qi-header"><span class="label">Quick Invoice</span><a>All clients</a></div>
+      <div class="scroll-row">
+        <div class="card">
+          <div class="top"><div class="av c1">SS<span class="pin"></span></div><div class="nm">Service Seeking</div></div>
+          <div class="amt">$17,168</div>
+          <div class="meta">INV-0001 · 12 Mar</div>
+          <div class="nudge">✦ Monthly due</div>
+        </div>
+        <div class="card">
+          <div class="top"><div class="av c2">AP<span class="pin"></span></div><div class="nm">Airtasker Pty</div></div>
+          <div class="amt">$8,200</div>
+          <div class="meta">INV-0003 · 3 Mar</div>
+          <div class="nudge" style="color: var(--text-muted);">14 days ago</div>
+        </div>
+        <div class="card">
+          <div class="top"><div class="av c3">HC</div><div class="nm">Hipages</div></div>
+          <div class="amt">$4,500</div>
+          <div class="meta">INV-0044 · 28 Feb</div>
+          <div class="nudge" style="color: var(--text-muted);">17 days ago</div>
+        </div>
+        <div class="card add-card">
+          <div class="plus">+</div>
+          <div class="add-label">New</div>
+        </div>
+      </div>
+
+      <div class="section-header"><h3>Invoices</h3></div>
+      <div class="invoice-item"><div class="invoice-left"><span class="name">Service Seeking</span><span class="number">INV-2026-0001</span></div><div class="invoice-right"><span class="amount">$17,168</span><span class="status-badge draft">Draft</span></div></div>
+      <div class="invoice-item"><div class="invoice-left"><span class="name">Service Seeking</span><span class="number">INV-2026-0002</span></div><div class="invoice-right"><span class="amount">$16,500</span><span class="status-badge draft">Draft</span></div></div>
+      <div class="invoice-item"><div class="invoice-left"><span class="name">Airtasker Pty</span><span class="number">INV-2026-0003</span></div><div class="invoice-right"><span class="amount">$8,200</span><span class="status-badge sent">Sent</span></div></div>
+      <div class="invoice-item"><div class="invoice-left"><span class="name">Hipages</span><span class="number">INV-2026-0044</span></div><div class="invoice-right"><span class="amount">$4,500</span><span class="status-badge sent">Sent</span></div></div>
+      <div class="invoice-item"><div class="invoice-left"><span class="name">Service Seeking</span><span class="number">INV-2025-0098</span></div><div class="invoice-right"><span class="amount">$15,400</span><span class="status-badge sent">Sent</span></div></div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab-item"><div class="tab-icon">📅</div><span>Calendar</span></div>
+      <div class="tab-item active"><div class="tab-icon">$</div><span>Money</span></div>
+      <div class="tab-item"><div class="tab-icon">☐</div><span>To Do</span></div>
+      <div class="tab-item"><div class="tab-icon">▸</div><span>Roadmap</span></div>
+      <div class="tab-item"><div class="tab-icon">⊞</div><span>Metrics</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

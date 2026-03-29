@@ -1,0 +1,64 @@
+{
+  "generated": "2026-03-12T23:17:58Z",
+  "weeks": [
+    {
+      "weekStart": "2026-03-02",
+      "weekEnd": "2026-03-08",
+      "clients": [
+        {
+          "name": "Cleopatterson",
+          "hours": 0.4,
+          "sessions": 4
+        }
+      ],
+      "totalHours": 0.4
+    },
+    {
+      "weekStart": "2026-03-09",
+      "weekEnd": "2026-03-15",
+      "clients": [
+        {
+          "name": "Trade Onboarding",
+          "hours": 7.7,
+          "sessions": 74
+        },
+        {
+          "name": "Wilko",
+          "hours": 4.7,
+          "sessions": 58
+        },
+        {
+          "name": "Choo",
+          "hours": 2.4,
+          "sessions": 34
+        },
+        {
+          "name": "Mindplan",
+          "hours": 2.3,
+          "sessions": 24
+        },
+        {
+          "name": "Cleo",
+          "hours": 0.9,
+          "sessions": 17
+        },
+        {
+          "name": "Zombie",
+          "hours": 0.9,
+          "sessions": 18
+        },
+        {
+          "name": "Concierge",
+          "hours": 0.2,
+          "sessions": 6
+        },
+        {
+          "name": "Cleopatterson",
+          "hours": 0.1,
+          "sessions": 2
+        }
+      ],
+      "totalHours": 19.2
+    }
+  ]
+}
