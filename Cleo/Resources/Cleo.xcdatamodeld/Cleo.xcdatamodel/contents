@@ -11,6 +11,7 @@
         <attribute name="appDisplayName" attributeType="String" defaultValueString=""/>
         <attribute name="brandAccentHex" attributeType="String" defaultValueString="#4CAE8D"/>
         <attribute name="isOnboarded" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="accountName" optional="YES" attributeType="String"/>
         <attribute name="bankName" optional="YES" attributeType="String"/>
         <attribute name="bsb" optional="YES" attributeType="String"/>
         <attribute name="accountNumber" optional="YES" attributeType="String"/>

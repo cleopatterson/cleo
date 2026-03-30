@@ -317,8 +317,11 @@ enum InvoicePDFGenerator {
 
     private static func drawPaymentSection(y: CGFloat, profile: BusinessProfile) {
         var rows: [(String, String)] = []
-        if !profile.businessName.isEmpty {
-            rows.append(("Account name", profile.businessName))
+        let acctName = profile.accountName?.trimmingCharacters(in: .whitespaces).isEmpty == false
+            ? profile.accountName!
+            : profile.businessName
+        if !acctName.isEmpty {
+            rows.append(("Account name", acctName))
         }
         if let bsb = profile.bsb, !bsb.isEmpty { rows.append(("BSB", bsb)) }
         if let acct = profile.accountNumber, !acct.isEmpty { rows.append(("Account number", acct)) }

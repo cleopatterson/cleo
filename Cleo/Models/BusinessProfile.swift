@@ -20,6 +20,7 @@ public class BusinessProfile: NSManagedObject, Identifiable {
     @NSManaged public var isOnboarded: Bool
 
     // Payment details (printed on invoices)
+    @NSManaged public var accountName: String?   // Bank account name (may differ from business name)
     @NSManaged public var bankName: String?
     @NSManaged public var bsb: String?
     @NSManaged public var accountNumber: String?

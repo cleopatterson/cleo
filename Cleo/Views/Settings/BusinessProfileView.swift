@@ -15,6 +15,7 @@ struct BusinessProfileView: View {
     @State private var phone = ""
 
     // Payment details
+    @State private var accountName = ""
     @State private var bankName = ""
     @State private var bsb = ""
     @State private var accountNumber = ""
@@ -113,6 +114,7 @@ struct BusinessProfileView: View {
             }
 
             Section("Payment Details (on invoices)") {
+                TextField("Account Name", text: $accountName)
                 TextField("Bank Name", text: $bankName)
                 TextField("BSB", text: $bsb)
                     .keyboardType(.numberPad)
@@ -247,6 +249,7 @@ struct BusinessProfileView: View {
         address = profile.address ?? ""
         email = profile.email ?? ""
         phone = profile.phone ?? ""
+        accountName = profile.accountName ?? ""
         bankName = profile.bankName ?? ""
         bsb = profile.bsb ?? ""
         accountNumber = profile.accountNumber ?? ""
@@ -275,6 +278,7 @@ struct BusinessProfileView: View {
         profile.address = address.isEmpty ? nil : address
         profile.email = email.isEmpty ? nil : email
         profile.phone = phone.isEmpty ? nil : phone
+        profile.accountName = accountName.isEmpty ? nil : accountName
         profile.bankName = bankName.isEmpty ? nil : bankName
         profile.bsb = bsb.isEmpty ? nil : bsb
         profile.accountNumber = accountNumber.isEmpty ? nil : accountNumber
