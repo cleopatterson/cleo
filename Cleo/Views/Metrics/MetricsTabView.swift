@@ -20,10 +20,7 @@ struct MetricsTabView: View {
                         fyLabel: viewModel.fyLabel
                     )
 
-                    // 2. Income Gap Tracker
-                    IncomeGapCard(aggregate: viewModel.trustAggregate)
-
-                    // 3. BAS / GST Card
+                    // 2. BAS / GST Card
                     if let bas = viewModel.basQuarter {
                         BASQuarterCard(bas: bas)
                     }

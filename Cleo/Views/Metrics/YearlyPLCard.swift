@@ -62,17 +62,18 @@ struct YearlyPLCard: View {
     private var trendChart: some View {
         let visiblePoints = points.filter { !$0.isFuture }
         return VStack(alignment: .trailing, spacing: 6) {
-            // Inline legend (avoids chartLegend layout issues)
             HStack(spacing: 12) {
                 legendDot(color: accentColor, label: "Revenue")
                 legendDot(color: .red.opacity(0.7), label: "Expenses", dashed: true)
             }
 
             Chart {
+                // Revenue area fill — separate series so it only connects revenue points
                 ForEach(visiblePoints) { point in
                     AreaMark(
                         x: .value("Month", point.shortMonth),
-                        y: .value("Revenue", point.revenue)
+                        y: .value("Amount", point.revenue),
+                        series: .value("Series", "Revenue")
                     )
                     .foregroundStyle(
                         LinearGradient(
@@ -81,31 +82,40 @@ struct YearlyPLCard: View {
                         )
                     )
                     .interpolationMethod(.catmullRom)
+                }
 
+                // Revenue line
+                ForEach(visiblePoints) { point in
                     LineMark(
                         x: .value("Month", point.shortMonth),
-                        y: .value("Revenue", point.revenue)
+                        y: .value("Amount", point.revenue),
+                        series: .value("Series", "Revenue")
                     )
                     .foregroundStyle(accentColor)
                     .lineStyle(StrokeStyle(lineWidth: 2))
                     .interpolationMethod(.catmullRom)
+                }
 
+                // Expenses line
+                ForEach(visiblePoints) { point in
                     LineMark(
                         x: .value("Month", point.shortMonth),
-                        y: .value("Expenses", point.expenses)
+                        y: .value("Amount", point.expenses),
+                        series: .value("Series", "Expenses")
                     )
                     .foregroundStyle(.red.opacity(0.7))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                     .interpolationMethod(.catmullRom)
+                }
 
-                    if point.isCurrentMonth {
-                        PointMark(
-                            x: .value("Month", point.shortMonth),
-                            y: .value("Revenue", point.revenue)
-                        )
-                        .foregroundStyle(accentColor)
-                        .symbolSize(55)
-                    }
+                // Current month dot
+                ForEach(visiblePoints.filter { $0.isCurrentMonth }) { point in
+                    PointMark(
+                        x: .value("Month", point.shortMonth),
+                        y: .value("Amount", point.revenue)
+                    )
+                    .foregroundStyle(accentColor)
+                    .symbolSize(55)
                 }
             }
             .chartXAxis {
