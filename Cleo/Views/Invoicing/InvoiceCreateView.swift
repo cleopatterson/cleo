@@ -432,9 +432,10 @@ struct InvoiceCreateView: View {
     private func lineItemCard(item: Binding<LineItemDraft>) -> some View {
         VStack(spacing: 8) {
             HStack {
-                TextField("Description", text: item.description)
+                TextField("Description", text: item.description, axis: .vertical)
                     .font(.subheadline)
                     .foregroundStyle(.white)
+                    .lineLimit(1...)
 
                 if lineItems.count > 1 {
                     Button {
