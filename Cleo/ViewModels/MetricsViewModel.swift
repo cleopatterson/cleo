@@ -142,30 +142,42 @@ class MetricsViewModel {
         let moFmt = DateFormatter(); moFmt.dateFormat = "MMM"
 
         // Build 12 months Jul → Jun
-        var fyMonths: [(ym: String, short: String, isFuture: Bool, isCurrent: Bool)] = []
+        var fyMonths: [(ym: String, short: String, date: Date, isFuture: Bool, isCurrent: Bool)] = []
+        let currentYM = ymFmt.string(from: now)
         for i in 0..<12 {
-            let month = (6 + i) % 12 + 1   // 0→Jul(7), 1→Aug(8), … 11→Jun(6)
+            let month = (6 + i) % 12 + 1
             let year  = month >= 7 ? fyStartYear : fyStartYear + 1
             var dc = DateComponents(); dc.year = year; dc.month = month; dc.day = 1
             guard let date = cal.date(from: dc) else { continue }
-            let ym = ymFmt.string(from: date)
-            let currentYM = ymFmt.string(from: now)
-            fyMonths.append((ym, moFmt.string(from: date), date > now, ym == currentYM))
+            fyMonths.append((ymFmt.string(from: date), moFmt.string(from: date), date, date > now, ymFmt.string(from: date) == currentYM))
         }
 
-        // Fetch matching summaries from shared (CloudKit) context
-        let req = NSFetchRequest<TrustFinancialSummary>(entityName: "TrustFinancialSummary")
-        req.predicate = NSPredicate(format: "yearMonth IN %@", fyMonths.map { $0.ym })
-        let summaries = (try? persistence.sharedContext.fetch(req)) ?? []
-        let byYM = Dictionary(uniqueKeysWithValues: summaries.map { ($0.yearMonth, $0) })
+        // Read directly from local viewContext — no CloudKit dependency
+        guard let fyStart = fyMonths.first?.date,
+              let lastMonth = fyMonths.last,
+              let fyEnd = cal.date(byAdding: .month, value: 1, to: lastMonth.date) else { return }
+
+        let invReq = NSFetchRequest<Invoice>(entityName: "Invoice")
+        invReq.predicate = NSPredicate(format: "issueDate >= %@ AND issueDate < %@",
+                                       fyStart as NSDate, fyEnd as NSDate)
+        let invoices = (try? persistence.viewContext.fetch(invReq)) ?? []
+
+        let expReq = NSFetchRequest<Expense>(entityName: "Expense")
+        expReq.predicate = NSPredicate(format: "date >= %@ AND date < %@",
+                                       fyStart as NSDate, fyEnd as NSDate)
+        let expenses = (try? persistence.viewContext.fetch(expReq)) ?? []
+
+        var revenueByYM: [String: Double] = [:]
+        var expensesByYM: [String: Double] = [:]
+        for inv in invoices { revenueByYM[ymFmt.string(from: inv.issueDate ?? now), default: 0] += inv.total }
+        for exp in expenses { expensesByYM[ymFmt.string(from: exp.date ?? now), default: 0] += exp.amount }
 
         annualPLPoints = fyMonths.map { m in
-            let s = byYM[m.ym]
-            return MonthlyPLPoint(
+            MonthlyPLPoint(
                 shortMonth: m.short,
                 yearMonth: m.ym,
-                revenue: s?.totalInvoiced ?? 0,
-                expenses: s?.totalExpenses ?? 0,
+                revenue: revenueByYM[m.ym] ?? 0,
+                expenses: expensesByYM[m.ym] ?? 0,
                 isFuture: m.isFuture,
                 isCurrentMonth: m.isCurrent
             )

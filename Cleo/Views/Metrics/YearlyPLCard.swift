@@ -60,80 +60,76 @@ struct YearlyPLCard: View {
     // MARK: - Chart
 
     private var trendChart: some View {
-        Chart {
-            // Revenue area fill
-            ForEach(points.filter { !$0.isFuture }) { point in
-                AreaMark(
-                    x: .value("Month", point.shortMonth),
-                    y: .value("Revenue", point.revenue)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [accentColor.opacity(0.25), accentColor.opacity(0.02)],
-                        startPoint: .top, endPoint: .bottom
-                    )
-                )
-                .interpolationMethod(.catmullRom)
-            }
-
-            // Revenue line
-            ForEach(points.filter { !$0.isFuture }) { point in
-                LineMark(
-                    x: .value("Month", point.shortMonth),
-                    y: .value("Revenue", point.revenue)
-                )
-                .foregroundStyle(accentColor)
-                .lineStyle(StrokeStyle(lineWidth: 2))
-                .interpolationMethod(.catmullRom)
-            }
-
-            // Expenses line
-            ForEach(points.filter { !$0.isFuture }) { point in
-                LineMark(
-                    x: .value("Month", point.shortMonth),
-                    y: .value("Expenses", point.expenses)
-                )
-                .foregroundStyle(.red.opacity(0.7))
-                .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-                .interpolationMethod(.catmullRom)
-            }
-
-            // Current month dot on revenue
-            ForEach(points.filter { $0.isCurrentMonth && !$0.isFuture }) { point in
-                PointMark(
-                    x: .value("Month", point.shortMonth),
-                    y: .value("Revenue", point.revenue)
-                )
-                .foregroundStyle(accentColor)
-                .symbolSize(60)
-            }
-        }
-        .chartXAxis {
-            AxisMarks(values: .automatic) { _ in
-                AxisValueLabel()
-                    .font(.system(size: 9))
-                    .foregroundStyle(.white.opacity(0.4))
-            }
-        }
-        .chartYAxis {
-            AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
-                AxisGridLine().foregroundStyle(.white.opacity(0.05))
-                AxisValueLabel {
-                    if let d = value.as(Double.self) {
-                        Text("$\(abbreviate(d))")
-                            .font(.system(size: 9))
-                            .foregroundStyle(.white.opacity(0.35))
-                    }
-                }
-            }
-        }
-        .chartLegend(position: .topTrailing, spacing: 8) {
-            HStack(spacing: 10) {
+        let visiblePoints = points.filter { !$0.isFuture }
+        return VStack(alignment: .trailing, spacing: 6) {
+            // Inline legend (avoids chartLegend layout issues)
+            HStack(spacing: 12) {
                 legendDot(color: accentColor, label: "Revenue")
                 legendDot(color: .red.opacity(0.7), label: "Expenses", dashed: true)
             }
+
+            Chart {
+                ForEach(visiblePoints) { point in
+                    AreaMark(
+                        x: .value("Month", point.shortMonth),
+                        y: .value("Revenue", point.revenue)
+                    )
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [accentColor.opacity(0.22), accentColor.opacity(0.02)],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+                    .interpolationMethod(.catmullRom)
+
+                    LineMark(
+                        x: .value("Month", point.shortMonth),
+                        y: .value("Revenue", point.revenue)
+                    )
+                    .foregroundStyle(accentColor)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    .interpolationMethod(.catmullRom)
+
+                    LineMark(
+                        x: .value("Month", point.shortMonth),
+                        y: .value("Expenses", point.expenses)
+                    )
+                    .foregroundStyle(.red.opacity(0.7))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                    .interpolationMethod(.catmullRom)
+
+                    if point.isCurrentMonth {
+                        PointMark(
+                            x: .value("Month", point.shortMonth),
+                            y: .value("Revenue", point.revenue)
+                        )
+                        .foregroundStyle(accentColor)
+                        .symbolSize(55)
+                    }
+                }
+            }
+            .chartXAxis {
+                AxisMarks(values: .automatic) { _ in
+                    AxisValueLabel()
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.4))
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
+                    AxisGridLine().foregroundStyle(.white.opacity(0.05))
+                    AxisValueLabel {
+                        if let d = value.as(Double.self) {
+                            Text("$\(abbreviate(d))")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.white.opacity(0.35))
+                        }
+                    }
+                }
+            }
+            .chartLegend(.hidden)
+            .frame(height: 150)
         }
-        .frame(height: 160)
     }
 
     // MARK: - Helpers
