@@ -24,6 +24,7 @@ class InvoicingViewModel {
         fetchInvoices()
         fetchExpenses()
         fetchClients()
+        backfillAndPushTrust()
     }
 
     // MARK: - Fetch
@@ -87,6 +88,15 @@ class InvoicingViewModel {
     private func pushTrustSummary() {
         let profile = PersistenceController.shared.getOrCreateBusinessProfile()
         Task {
+            await trustSyncService.pushSummary(invoices: invoices, expenses: expenses, profile: profile)
+        }
+    }
+
+    /// On first load, backfill historical monthly summaries then push current month.
+    private func backfillAndPushTrust() {
+        let profile = PersistenceController.shared.getOrCreateBusinessProfile()
+        Task {
+            await trustSyncService.backfillMonthlyHistory(invoices: invoices, expenses: expenses, profile: profile)
             await trustSyncService.pushSummary(invoices: invoices, expenses: expenses, profile: profile)
         }
     }

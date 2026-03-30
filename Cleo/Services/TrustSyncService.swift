@@ -87,6 +87,84 @@ class TrustSyncService {
 
     // MARK: - Push
 
+    /// Backfills TrustFinancialSummary for every historical month that has invoice/expense data
+    /// but no existing summary. Call once on first load after seeding.
+    func backfillMonthlyHistory(invoices: [Invoice], expenses: [Expense], profile: BusinessProfile) async {
+        let contributorID = profile.id?.uuidString ?? "unknown"
+        let contributorName: String = {
+            if !profile.appDisplayName.isEmpty { return profile.appDisplayName }
+            if !profile.businessName.isEmpty   { return profile.businessName }
+            return "Me"
+        }()
+
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM"
+
+        // Group by month
+        var invoicesByMonth: [String: [Invoice]] = [:]
+        for inv in invoices {
+            let ym = fmt.string(from: inv.issueDate ?? Date())
+            invoicesByMonth[ym, default: []].append(inv)
+        }
+        var expensesByMonth: [String: [Expense]] = [:]
+        for exp in expenses {
+            let ym = fmt.string(from: exp.date ?? Date())
+            expensesByMonth[ym, default: []].append(exp)
+        }
+
+        let allMonths = Set(invoicesByMonth.keys).union(Set(expensesByMonth.keys))
+        let currentYM = currentYearMonth()
+
+        for ym in allMonths {
+            // Upsert — update existing record if present so numbers stay accurate
+            let req = NSFetchRequest<TrustFinancialSummary>(entityName: "TrustFinancialSummary")
+            req.predicate = NSPredicate(format: "contributorID == %@ AND yearMonth == %@", contributorID, ym)
+            req.fetchLimit = 1
+
+            // For the current month, skip — pushSummary handles that live
+            if ym == currentYM { continue }
+
+            let monthInvoices = invoicesByMonth[ym] ?? []
+            let monthExpenses = expensesByMonth[ym] ?? []
+
+            let totalInvoiced    = monthInvoices.reduce(0) { $0 + $1.total }
+            let totalPaid        = monthInvoices.filter { $0.status == .paid }.reduce(0) { $0 + $1.total }
+            let totalOutstanding = monthInvoices.filter { $0.status == .sent || $0.status == .overdue }.reduce(0) { $0 + $1.total }
+            let gstCollected     = monthInvoices.reduce(0) { $0 + $1.taxAmount }
+            let totalExpenses    = monthExpenses.reduce(0) { $0 + $1.amount }
+            // Only apply GST-on-expenses formula for months where GST applies (Apr 2026+)
+            let isGSTMonth       = ym >= "2026-04"
+            let gstOnExpenses    = isGSTMonth ? totalExpenses / 11.0 : 0.0
+
+            var categoryTotals: [String: Double] = [:]
+            for exp in monthExpenses { categoryTotals[exp.categoryRaw, default: 0] += exp.amount }
+            let categoryJSON = (try? String(data: JSONEncoder().encode(categoryTotals), encoding: .utf8)) ?? "{}"
+
+            let summary: TrustFinancialSummary
+            if let existing = try? persistence.sharedContext.fetch(req).first {
+                summary = existing
+            } else {
+                summary = TrustFinancialSummary(context: persistence.sharedContext)
+                summary.id = UUID()
+                summary.contributorID = contributorID
+            }
+            summary.contributorName        = contributorName
+            summary.yearMonth              = ym
+            summary.totalInvoiced          = totalInvoiced
+            summary.totalPaid              = totalPaid
+            summary.totalOutstanding       = totalOutstanding
+            summary.invoiceCount           = Int32(monthInvoices.count)
+            summary.gstCollected           = gstCollected
+            summary.gstOnExpenses          = gstOnExpenses
+            summary.totalExpenses          = totalExpenses
+            summary.expensesByCategoryJSON = categoryJSON
+            summary.lastUpdated            = Date()
+        }
+
+        persistence.saveShared()
+        lastSyncDate = Date()
+    }
+
     /// Recalculates and upserts the current contributor's monthly summary.
     /// Call this after any invoice or expense mutation.
     func pushSummary(invoices: [Invoice], expenses: [Expense], profile: BusinessProfile) async {
@@ -109,7 +187,8 @@ class TrustSyncService {
         let totalOutstanding = monthInvoices.filter { $0.status == .sent || $0.status == .overdue }.reduce(0) { $0 + $1.total }
         let gstCollected    = monthInvoices.reduce(0) { $0 + $1.taxAmount }
         let totalExpenses   = monthExpenses.reduce(0) { $0 + $1.amount }
-        let gstOnExpenses   = totalExpenses / 11.0   // all expenses assumed GST-inclusive
+        let isGSTMonth      = currentYearMonth() >= "2026-04"
+        let gstOnExpenses   = isGSTMonth ? totalExpenses / 11.0 : 0.0
 
         var categoryTotals: [String: Double] = [:]
         for exp in monthExpenses {
