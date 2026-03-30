@@ -13,6 +13,8 @@ struct OnboardingView: View {
     @State private var isExtracting = false
     @State private var step = 0
 
+    @FocusState private var nameFieldFocused: Bool
+
     var body: some View {
         ZStack {
             Color.cleoBackground.ignoresSafeArea()
@@ -29,14 +31,21 @@ struct OnboardingView: View {
                 .padding(.top, 60)
                 .padding(.bottom, 40)
 
-                // Steps
-                TabView(selection: $step) {
-                    nameStep.tag(0)
-                    logoStep.tag(1)
-                    colorStep.tag(2)
+                // Steps — ZStack with slide transitions avoids TabView swipe conflicts
+                ZStack {
+                    nameStep
+                        .opacity(step == 0 ? 1 : 0)
+                        .offset(x: step == 0 ? 0 : -400)
+
+                    logoStep
+                        .opacity(step == 1 ? 1 : 0)
+                        .offset(x: step == 1 ? 0 : (step < 1 ? 400 : -400))
+
+                    colorStep
+                        .opacity(step == 2 ? 1 : 0)
+                        .offset(x: step >= 2 ? 0 : 400)
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(.easeInOut, value: step)
+                .animation(.easeInOut(duration: 0.3), value: step)
             }
         }
     }
@@ -71,6 +80,13 @@ struct OnboardingView: View {
                         .strokeBorder(theme.brandAccent.opacity(0.3), lineWidth: 1)
                 )
                 .padding(.horizontal, 40)
+                .focused($nameFieldFocused)
+                .submitLabel(.next)
+                .onSubmit {
+                    if !businessName.trimmingCharacters(in: .whitespaces).isEmpty {
+                        advanceToLogo()
+                    }
+                }
                 .onChange(of: businessName) {
                     theme.appDisplayName = businessName
                 }
@@ -78,7 +94,7 @@ struct OnboardingView: View {
             Spacer()
 
             nextButton(enabled: !businessName.trimmingCharacters(in: .whitespaces).isEmpty) {
-                step = 1
+                advanceToLogo()
             }
         }
         .padding(.horizontal, 24)
@@ -119,11 +135,9 @@ struct OnboardingView: View {
                     .fill(.white.opacity(0.04))
                     .frame(width: 120, height: 120)
                     .overlay {
-                        VStack(spacing: 8) {
-                            Image(systemName: "photo")
-                                .font(.largeTitle)
-                                .foregroundStyle(.white.opacity(0.3))
-                        }
+                        Image(systemName: "photo")
+                            .font(.largeTitle)
+                            .foregroundStyle(.white.opacity(0.3))
                     }
             }
 
@@ -171,7 +185,6 @@ struct OnboardingView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            // Preview of their brand
             VStack(spacing: 8) {
                 Text(theme.appDisplayName)
                     .font(.system(.largeTitle, design: .serif).bold())
@@ -213,6 +226,7 @@ struct OnboardingView: View {
                         in: Capsule()
                     )
                 }
+                .buttonStyle(.plain)
             }
 
             // Preset palette
@@ -241,13 +255,13 @@ struct OnboardingView: View {
                                 .foregroundStyle(.white.opacity(0.5))
                         }
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 24)
 
             Spacer()
 
-            // Done button
             Button {
                 theme.isOnboarded = true
                 let profile = PersistenceController.shared.getOrCreateBusinessProfile()
@@ -269,6 +283,14 @@ struct OnboardingView: View {
     }
 
     // MARK: - Helpers
+
+    private func advanceToLogo() {
+        nameFieldFocused = false
+        // Small delay so keyboard dismiss animation completes before slide transition
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            step = 1
+        }
+    }
 
     private func nextButton(enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
@@ -295,14 +317,12 @@ struct OnboardingView: View {
         logoImage = uiImage
         isExtracting = true
 
-        // Save logo to documents
         if let path = saveLogoToDisk(data) {
             let profile = PersistenceController.shared.getOrCreateBusinessProfile()
             profile.logoImagePath = path
             PersistenceController.shared.save()
         }
 
-        // Extract colour
         if let hex = LogoColorExtractor.extractDominantColor(from: uiImage) {
             extractedHex = hex
             withAnimation {
