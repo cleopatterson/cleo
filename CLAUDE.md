@@ -46,6 +46,24 @@ xcodebuild -project Cleo.xcodeproj -scheme Cleo \
 - `Config/Secrets.xcconfig` — never commit, contains `CLAUDE_API_KEY` and `GITHUB_TOKEN`
 - Values exposed to app via `Info.plist` property list entries in `project.yml`
 
+## File Map (for CI bug fixes)
+When fixing a bug, go directly to the relevant files — don't explore broadly.
+
+| Area | Key files |
+|------|-----------|
+| Invoicing VM | `Cleo/ViewModels/InvoicingViewModel.swift` |
+| Invoice views | `Cleo/Views/Invoicing/` (InvoiceCreateView, InvoiceDetailView, etc.) |
+| Invoice PDF | `Cleo/Services/InvoicePDFGenerator.swift` |
+| Core Data model | `Cleo/Resources/Cleo.xcdatamodeld/Cleo.xcdatamodel/contents` |
+| Core Data models | `Cleo/Models/` (Invoice.swift, Expense.swift, Client.swift, etc.) |
+| Profile | `Cleo/Models/BusinessProfile.swift` |
+| Metrics/Trust | `Cleo/Services/TrustSyncService.swift`, `Cleo/Views/Metrics/` |
+| Roadmap | `Cleo/ViewModels/RoadmapViewModel.swift`, `Cleo/Views/Roadmap/` |
+| Calendar | `Cleo/ViewModels/CalendarViewModel.swift`, `Cleo/Views/Calendar/` |
+| Notes/Bugs | `Cleo/ViewModels/TodoViewModel.swift`, `Cleo/ViewModels/BugReportsViewModel.swift` |
+| Persistence | `Cleo/Services/PersistenceController.swift` |
+| Theming | `Cleo/Theme/ThemeManager.swift` |
+
 ## Don't Do
 - Don't add `@Published` or `ObservableObject` — use `@Observable`
 - Don't add GST to pre-April 2026 historical invoices (`taxRate = 0.0`)
