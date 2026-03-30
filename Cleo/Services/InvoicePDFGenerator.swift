@@ -59,6 +59,15 @@ enum InvoicePDFGenerator {
         var curY = y
         let x = margin
 
+        // Logo — top right, up to 72pt square
+        let logoSize: CGFloat = 72
+        if let logoPath = profile.logoImagePath, !logoPath.isEmpty,
+           let logo = UIImage(contentsOfFile: logoPath) {
+            let logoX = margin + contentWidth - logoSize
+            let logoRect = CGRect(x: logoX, y: curY, width: logoSize, height: logoSize)
+            logo.draw(in: logoRect)
+        }
+
         // Business name — large serif-style bold
         let nameFont = UIFont(name: "Georgia-Bold", size: 22) ?? UIFont.systemFont(ofSize: 22, weight: .bold)
         let nameAttr = NSAttributedString(string: profile.businessName.isEmpty ? "Your Business" : profile.businessName, attributes: [
@@ -102,7 +111,9 @@ enum InvoicePDFGenerator {
             curY += attr.size().height + 2
         }
 
-        return curY + 20
+        // Ensure we clear the logo if it extends below the text block
+        let logoBottom = y + 72
+        return max(curY, logoBottom) + 20
     }
 
     // MARK: - "Tax Invoice" Title
