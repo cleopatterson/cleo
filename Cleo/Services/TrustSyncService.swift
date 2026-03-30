@@ -282,17 +282,31 @@ class TrustSyncService {
     func currentQuarterBAS() -> BASQuarterSummary {
         let settings = getOrCreateSettings()
         let quarter = BASQuarterHelper.currentQuarter()
-        let months = BASQuarterHelper.monthStrings(for: quarter)
 
-        let req = NSFetchRequest<TrustFinancialSummary>(entityName: "TrustFinancialSummary")
-        req.predicate = NSPredicate(format: "yearMonth IN %@", months)
-        let summaries = (try? persistence.sharedContext.fetch(req)) ?? []
+        // Read directly from local invoices/expenses — avoids stale TrustFinancialSummary
+        // data that may not yet have been written by the async backfill.
+        let invReq = NSFetchRequest<Invoice>(entityName: "Invoice")
+        invReq.predicate = NSPredicate(format: "issueDate >= %@ AND issueDate <= %@",
+                                       quarter.start as NSDate, quarter.end as NSDate)
+        let invoices = (try? persistence.viewContext.fetch(invReq)) ?? []
 
-        let gstCollected  = summaries.reduce(0) { $0 + $1.gstCollected }
-        let gstOnExpenses = summaries.reduce(0) { $0 + $1.gstOnExpenses }
+        let expReq = NSFetchRequest<Expense>(entityName: "Expense")
+        expReq.predicate = NSPredicate(format: "date >= %@ AND date <= %@",
+                                       quarter.start as NSDate, quarter.end as NSDate)
+        let expenses = (try? persistence.viewContext.fetch(expReq)) ?? []
+
+        let totalRevenue  = invoices.reduce(0) { $0 + $1.total }
+        // Use each invoice's own taxAmount — respects taxRate = 0.0 on pre-GST invoices
+        let gstCollected  = invoices.reduce(0) { $0 + $1.taxAmount }
+        let totalExpenses = expenses.reduce(0) { $0 + $1.amount }
+        // Only apply GST-on-expenses for months from April 2026 onward
+        let gstOnExpenses: Double = {
+            let gstStartYM = "2026-04"
+            let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM"
+            let quarterEndYM = fmt.string(from: quarter.end)
+            return quarterEndYM >= gstStartYM ? totalExpenses / 11.0 : 0.0
+        }()
         let netGSTPayable = max(0, gstCollected - gstOnExpenses)
-        let totalRevenue  = summaries.reduce(0) { $0 + $1.totalInvoiced }
-        let totalExpenses = summaries.reduce(0) { $0 + $1.totalExpenses }
         let netProfit     = totalRevenue - totalExpenses
         let taxProvision  = max(0, netProfit * settings.estimatedTaxRate)
         let notYourMoney  = netGSTPayable + taxProvision
