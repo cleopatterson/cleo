@@ -11,21 +11,24 @@ struct MetricsTabView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
-                    // 1. Trust Briefing Card
-                    monthlyBriefingCard
+                    // 1. Annual P&L trendline
+                    YearlyPLCard(
+                        points: viewModel.annualPLPoints,
+                        annualRevenue: viewModel.annualRevenue,
+                        annualExpenses: viewModel.annualExpenses,
+                        annualNetProfit: viewModel.annualNetProfit,
+                        fyLabel: viewModel.fyLabel
+                    )
 
-                    // 2. Income Gap Tracker (NEW)
+                    // 2. Income Gap Tracker
                     IncomeGapCard(aggregate: viewModel.trustAggregate)
 
-                    // 3. BAS / GST Card (NEW)
+                    // 3. BAS / GST Card
                     if let bas = viewModel.basQuarter {
                         BASQuarterCard(bas: bas)
                     }
 
-                    // 4. Profit & Loss
-                    profitLossCard
-
-                    // 5. Time Tracking
+                    // 4. Time Tracking
                     if !viewModel.weeks.isEmpty {
                         timeTrackingSection
                     }
@@ -48,99 +51,7 @@ struct MetricsTabView: View {
             }
             .task {
                 await viewModel.loadData()
-                viewModel.loadBriefing()
             }
-        }
-    }
-
-    // MARK: - Monthly Briefing Card
-
-    private var monthlyBriefingCard: some View {
-        let tags = viewModel.financialTagPills.map { BriefingCardView.StatPill(label: $0.label, value: $0.value) }
-        return BriefingCardView(
-            badge: viewModel.currentMonthLabel,
-            headline: viewModel.briefing?.headline ?? viewModel.fallbackHeadline,
-            summary: viewModel.briefing?.summary ?? viewModel.fallbackSummary,
-            stats: tags,
-            accent: .metrics,
-            isLoading: viewModel.isLoadingBriefing
-        )
-    }
-
-    // MARK: - Profit & Loss Card
-
-    private var profitLossCard: some View {
-        VStack(spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("PROFIT & LOSS")
-                        .font(.caption.bold())
-                        .foregroundStyle(.white.opacity(0.4))
-                        .tracking(1)
-                    Text(viewModel.trustAggregate.isSoloMode
-                         ? "Your business — last 30 days"
-                         : "Combined trust — last 30 days")
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.3))
-                }
-                Spacer()
-                Text("Last 30 days")
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.35))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
-            }
-
-            VStack(spacing: 4) {
-                Text("Net Profit")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.5))
-                Text("$\(String(format: "%.0f", abs(viewModel.netProfit)))")
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundStyle(viewModel.netProfit >= 0 ? accent.color : .red)
-                if let trend = viewModel.profitTrendPercent {
-                    let arrow = trend >= 0 ? "↑" : "↓"
-                    Text("\(arrow) \(Int(abs(trend)))% vs previous period")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(trend >= 0 ? accent.color : .red)
-                }
-            }
-            .frame(maxWidth: .infinity)
-
-            let maxVal = max(viewModel.monthlyRevenue, viewModel.monthlyExpenses, 1)
-            VStack(spacing: 10) {
-                barRow(label: "Revenue",  value: viewModel.monthlyRevenue,  maxValue: maxVal, color: accent.color)
-                barRow(label: "Expenses", value: viewModel.monthlyExpenses, maxValue: maxVal, color: .red)
-            }
-        }
-        .padding(18)
-        .background(.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 18))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(.white.opacity(0.06), lineWidth: 1)
-        )
-    }
-
-    private func barRow(label: String, value: Double, maxValue: Double, color: Color) -> some View {
-        HStack(spacing: 10) {
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.white.opacity(0.5))
-                .frame(width: 70, alignment: .leading)
-
-            GeometryReader { geo in
-                let fillWidth = maxValue > 0 ? (value / maxValue) * geo.size.width : 0
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 8).fill(.white.opacity(0.04))
-                    RoundedRectangle(cornerRadius: 8).fill(color.opacity(0.25)).frame(width: max(fillWidth, 0))
-                    Text("$\(String(format: "%.0f", value))")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(color)
-                        .padding(.leading, 10)
-                }
-            }
-            .frame(height: 28)
         }
     }
 

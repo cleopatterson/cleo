@@ -5,12 +5,9 @@ import CoreData
 @Observable
 class MetricsViewModel {
     let timeService: TimeTrackingService
-    let claudeService: ClaudeAPIService
     let persistence: PersistenceController
     let trustSyncService: TrustSyncService
 
-    var briefing: AIBriefingResponse?
-    var isLoadingBriefing = false
     var selectedWeekIndex: Int = 0
 
     // Local financial cache (refreshed once per load)
@@ -24,14 +21,11 @@ class MetricsViewModel {
     private(set) var trustAggregate: TrustMonthlyAggregate = .empty
     private(set) var basQuarter: BASQuarterSummary?
 
-    @ObservationIgnored private var hasLoadedBriefing = false
-
     init(timeService: TimeTrackingService,
          claudeService: ClaudeAPIService,
          persistence: PersistenceController,
          trustSyncService: TrustSyncService) {
         self.timeService = timeService
-        self.claudeService = claudeService
         self.persistence = persistence
         self.trustSyncService = trustSyncService
     }
@@ -110,6 +104,74 @@ class MetricsViewModel {
         return ((cur.totalHours - prev.totalHours) / prev.totalHours) * 100
     }
 
+    // MARK: - Annual P&L
+
+    struct MonthlyPLPoint: Identifiable {
+        let id = UUID()
+        let shortMonth: String
+        let yearMonth: String
+        let revenue: Double
+        let expenses: Double
+        var netProfit: Double { revenue - expenses }
+        let isFuture: Bool
+        let isCurrentMonth: Bool
+    }
+
+    private(set) var annualPLPoints: [MonthlyPLPoint] = []
+
+    var annualRevenue: Double  { annualPLPoints.filter { !$0.isFuture }.reduce(0) { $0 + $1.revenue } }
+    var annualExpenses: Double { annualPLPoints.filter { !$0.isFuture }.reduce(0) { $0 + $1.expenses } }
+    var annualNetProfit: Double { annualRevenue - annualExpenses }
+
+    var fyLabel: String {
+        let cal = Calendar.current
+        let year = cal.component(.year, from: Date())
+        let month = cal.component(.month, from: Date())
+        let fy = month >= 7 ? (year + 1) % 100 : year % 100
+        return "FY\(String(format: "%02d", fy))"
+    }
+
+    func refreshAnnualPL() {
+        let cal = Calendar.current
+        let now = Date()
+        let currentMonth = cal.component(.month, from: now)
+        let currentYear  = cal.component(.year,  from: now)
+        let fyStartYear  = currentMonth >= 7 ? currentYear : currentYear - 1
+
+        let ymFmt = DateFormatter(); ymFmt.dateFormat = "yyyy-MM"
+        let moFmt = DateFormatter(); moFmt.dateFormat = "MMM"
+
+        // Build 12 months Jul → Jun
+        var fyMonths: [(ym: String, short: String, isFuture: Bool, isCurrent: Bool)] = []
+        for i in 0..<12 {
+            let month = (6 + i) % 12 + 1   // 0→Jul(7), 1→Aug(8), … 11→Jun(6)
+            let year  = month >= 7 ? fyStartYear : fyStartYear + 1
+            var dc = DateComponents(); dc.year = year; dc.month = month; dc.day = 1
+            guard let date = cal.date(from: dc) else { continue }
+            let ym = ymFmt.string(from: date)
+            let currentYM = ymFmt.string(from: now)
+            fyMonths.append((ym, moFmt.string(from: date), date > now, ym == currentYM))
+        }
+
+        // Fetch matching summaries from shared (CloudKit) context
+        let req = NSFetchRequest<TrustFinancialSummary>(entityName: "TrustFinancialSummary")
+        req.predicate = NSPredicate(format: "yearMonth IN %@", fyMonths.map { $0.ym })
+        let summaries = (try? persistence.sharedContext.fetch(req)) ?? []
+        let byYM = Dictionary(uniqueKeysWithValues: summaries.map { ($0.yearMonth, $0) })
+
+        annualPLPoints = fyMonths.map { m in
+            let s = byYM[m.ym]
+            return MonthlyPLPoint(
+                shortMonth: m.short,
+                yearMonth: m.ym,
+                revenue: s?.totalInvoiced ?? 0,
+                expenses: s?.totalExpenses ?? 0,
+                isFuture: m.isFuture,
+                isCurrentMonth: m.isCurrent
+            )
+        }
+    }
+
     // MARK: - Load
 
     func loadData() async {
@@ -117,116 +179,10 @@ class MetricsViewModel {
         refreshFinancials()
         trustAggregate = trustSyncService.combinedMonthlyData()
         basQuarter = trustSyncService.currentQuarterBAS()
+        refreshAnnualPL()
     }
 
-    // MARK: - Briefing
-
-    @ObservationIgnored private var briefingTask: Task<Void, Never>?
-
-    func loadBriefing() {
-        guard !hasLoadedBriefing || briefing == nil else { return }
-        guard briefingTask == nil else { return }
-        hasLoadedBriefing = true
-        isLoadingBriefing = true
-
-        let agg = trustAggregate
-        let bas = basQuarter
-
-        var payload: [String: Any] = [
-            "revenue": monthlyRevenue,
-            "expenses": monthlyExpenses,
-            "netProfit": netProfit,
-            "profitTrend": profitTrendPercent ?? 0,
-            "outstanding": totalOutstanding,
-            "topTimeClient": heroClient?.name ?? "none",
-            "weeklyHours": selectedWeek?.totalHours ?? 0
-        ]
-
-        // Trust-level data (if available)
-        if !agg.contributors.isEmpty {
-            let contributorsPayload = agg.contributors.map { [
-                "name": $0.name,
-                "revenue": $0.revenue,
-                "expenses": $0.expenses,
-                "gstCollected": $0.gstCollected
-            ] as [String: Any] }
-            payload["contributors"] = contributorsPayload
-            payload["combined"] = [
-                "totalRevenue": agg.combinedRevenue,
-                "totalExpenses": agg.combinedExpenses,
-                "netProfit": agg.netProfit,
-                "gstCollected": agg.gstCollected,
-                "netGSTPayable": agg.netGSTPayable,
-                "taxProvision": agg.taxProvision,
-                "safeToSpend": agg.safeToSpend,
-                "incomeTarget": agg.incomeTarget,
-                "incomeGapPercent": Int(agg.gapPercent)
-            ] as [String: Any]
-        }
-
-        if let bas {
-            payload["bas"] = [
-                "quarter": bas.quarterLabel,
-                "daysUntilDue": bas.daysUntilDue,
-                "netGSTPayable": bas.netGSTPayable,
-                "taxProvision": bas.taxProvision,
-                "notYourMoney": bas.notYourMoney
-            ] as [String: Any]
-        }
-
-        briefingTask = Task {
-            let result = await claudeService.generateBriefing(tab: .metrics, dataPayload: payload)
-            briefing = result
-            isLoadingBriefing = false
-            briefingTask = nil
-            if result == nil { hasLoadedBriefing = false }
-        }
-    }
-
-    // MARK: - Briefing Fallbacks
-
-    var fallbackHeadline: String {
-        let revenue = trustAggregate.combinedRevenue > 0 ? trustAggregate.combinedRevenue : monthlyRevenue
-        if revenue > 0 {
-            return "$\(String(format: "%.0f", revenue)) invoiced this month"
-        }
-        if netProfit > 0 {
-            return "$\(String(format: "%.0f", netProfit)) profit this month"
-        }
-        return "No data yet this month"
-    }
-
-    var fallbackSummary: String {
-        var parts: [String] = []
-        if trustAggregate.combinedRevenue > 0 {
-            parts.append("Revenue: $\(String(format: "%.0f", trustAggregate.combinedRevenue))")
-        }
-        if trustAggregate.combinedExpenses > 0 {
-            parts.append("Expenses: $\(String(format: "%.0f", trustAggregate.combinedExpenses))")
-        }
-        if trustAggregate.netGSTPayable > 0 {
-            parts.append("GST owed: $\(String(format: "%.0f", trustAggregate.netGSTPayable))")
-        }
-        if parts.isEmpty { return "Create invoices and log expenses to see your trust dashboard." }
-        return parts.joined(separator: " · ")
-    }
-
-    var financialTagPills: [FinancialTagPill] {
-        var tags: [FinancialTagPill] = []
-        let revenue = trustAggregate.combinedRevenue > 0 ? trustAggregate.combinedRevenue : monthlyRevenue
-        tags.append(FinancialTagPill(label: "Revenue", value: "$\(String(format: "%.0f", revenue))"))
-        let expenses = trustAggregate.combinedExpenses > 0 ? trustAggregate.combinedExpenses : monthlyExpenses
-        tags.append(FinancialTagPill(label: "Expenses", value: "$\(String(format: "%.0f", expenses))"))
-        if trustAggregate.netGSTPayable > 0 {
-            tags.append(FinancialTagPill(label: "GST owed", value: "$\(String(format: "%.0f", trustAggregate.netGSTPayable))"))
-        }
-        return tags
-    }
-
-    struct FinancialTagPill {
-        let label: String
-        let value: String
-    }
+    // MARK: - Briefing Fallbacks (kept for other tabs that may reference)
 
     var currentMonthLabel: String {
         let formatter = DateFormatter()
