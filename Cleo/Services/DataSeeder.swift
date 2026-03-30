@@ -33,9 +33,9 @@ struct DataSeeder {
         InvoiceRecord(number: "00011", date: dc(2025, 10, 16), dueDate: dc(2025, 10, 21), retainer: 15000, software: 445, description: "Pilot monthly retainer 07"),
         InvoiceRecord(number: "00012", date: dc(2025, 11, 14), dueDate: dc(2025, 11, 20), retainer: 15000, software: 461, description: "Integration monthly retainer 01"),
         InvoiceRecord(number: "00013", date: dc(2025, 12, 15), dueDate: dc(2025, 12, 20), retainer: 15000, software: 461, description: "Integration monthly retainer 02"),
-        InvoiceRecord(number: "000014", date: dc(2026, 1, 15), dueDate: dc(2026, 1, 20),  retainer: 15000, software: 461, description: "Integration monthly retainer 03"),
-        InvoiceRecord(number: "000015", date: dc(2026, 2, 14), dueDate: dc(2026, 2, 20),  retainer: 15000, software: 607, description: "Integration monthly retainer 04"),
-        InvoiceRecord(number: "000016", date: dc(2026, 3, 16), dueDate: dc(2026, 3, 20),  retainer: 15000, software: 632, description: "Integration monthly retainer 05"),
+        InvoiceRecord(number: "00014", date: dc(2026, 1, 15),  dueDate: dc(2026, 1, 20),  retainer: 15000, software: 461, description: "Integration monthly retainer 03"),
+        InvoiceRecord(number: "00015", date: dc(2026, 2, 14),  dueDate: dc(2026, 2, 20),  retainer: 15000, software: 607, description: "Integration monthly retainer 04"),
+        InvoiceRecord(number: "00016", date: dc(2026, 3, 16),  dueDate: dc(2026, 3, 20),  retainer: 15000, software: 632, description: "Integration monthly retainer 05"),
     ]
 
     // MARK: - Seed
@@ -51,7 +51,7 @@ struct DataSeeder {
             let invoice = Invoice(context: context)
             invoice.id = UUID()
             invoice.invoiceNumber = record.number
-            invoice.clientName = "Oliver Pennington"
+            invoice.clientName = "Service Seeking"
             invoice.clientEmail = "oliver@serviceseeking.com.au"
             invoice.clientAddress = "1 Bulkara Rd, Bellevue Hill NSW 2023"
             invoice.issueDate = issueDate
@@ -93,10 +93,17 @@ struct DataSeeder {
             }
         }
 
+        // Advance sequence counter past the 9 seeded invoices (last was 00016 → next is 17)
+        let profileRequest = NSFetchRequest<BusinessProfile>(entityName: "BusinessProfile")
+        if let profile = (try? context.fetch(profileRequest))?.first {
+            profile.invoicePrefix = ""
+            profile.nextInvoiceSequence = 17
+        }
+
         // Service Seeking client record
         let client = Client(context: context)
         client.id = UUID()
-        client.name = "Oliver Pennington"
+        client.name = "Service Seeking"
         client.email = "oliver@serviceseeking.com.au"
         client.phone = nil
         client.address = "1 Bulkara Rd, Bellevue Hill NSW 2023"

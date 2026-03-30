@@ -752,8 +752,13 @@ struct InvoiceCreateView: View {
 
     private var previewInvoiceNumber: String {
         let profile = PersistenceController.shared.getOrCreateBusinessProfile()
-        let year = Calendar.current.component(.year, from: Date())
-        return String(format: "%@-%d-%04d", profile.invoicePrefix, year, profile.nextInvoiceSequence)
+        let prefix = profile.invoicePrefix.trimmingCharacters(in: .whitespaces)
+        if prefix.isEmpty {
+            return String(format: "%05d", profile.nextInvoiceSequence)
+        } else {
+            let year = Calendar.current.component(.year, from: Date())
+            return String(format: "%@-%d-%04d", prefix, year, profile.nextInvoiceSequence)
+        }
     }
 
     private func formSection(_ title: String, @ViewBuilder content: () -> some View) -> some View {

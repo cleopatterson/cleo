@@ -106,8 +106,15 @@ struct PersistenceController {
     func nextInvoiceNumber() -> String {
         let profile = getOrCreateBusinessProfile()
         let seq = profile.nextInvoiceSequence
-        let year = Calendar.current.component(.year, from: Date())
-        let number = String(format: "%@-%d-%04d", profile.invoicePrefix, year, seq)
+        let prefix = profile.invoicePrefix.trimmingCharacters(in: .whitespaces)
+        let number: String
+        if prefix.isEmpty {
+            // Simple zero-padded sequential format: 00017, 00018…
+            number = String(format: "%05d", seq)
+        } else {
+            let year = Calendar.current.component(.year, from: Date())
+            number = String(format: "%@-%d-%04d", prefix, year, seq)
+        }
         profile.nextInvoiceSequence = seq + 1
         try? viewContext.save()
         return number
