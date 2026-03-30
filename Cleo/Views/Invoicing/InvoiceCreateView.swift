@@ -5,6 +5,7 @@ import PhotosUI
 
 struct InvoiceCreateView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(ThemeManager.self) private var theme
     @Bindable var viewModel: InvoicingViewModel
     let claudeService: ClaudeAPIService
     let prefillClient: Client?
@@ -27,6 +28,8 @@ struct InvoiceCreateView: View {
     @State private var clientEmail = ""
     @State private var clientAddress = ""
     @State private var invoiceDate = Date()
+    @State private var dueDate = Date()
+    @State private var invoiceNumber = ""
     @State private var paymentTerms = PaymentTerms.net14
     @State private var notes = ""
     @State private var lineItems: [LineItemDraft] = [LineItemDraft()]
@@ -67,7 +70,7 @@ struct InvoiceCreateView: View {
     private var taxRate: Double { PersistenceController.shared.getOrCreateBusinessProfile().defaultTaxRate }
     private var taxAmount: Double { subtotal * taxRate }
     private var total: Double { subtotal + taxAmount }
-    private var dueDate: Date { Calendar.current.date(byAdding: .day, value: paymentTerms.rawValue, to: invoiceDate) ?? invoiceDate }
+    private var computedDueDate: Date { Calendar.current.date(byAdding: .day, value: paymentTerms.rawValue, to: invoiceDate) ?? invoiceDate }
     private var hasValidLineItems: Bool { lineItems.contains { !$0.description.isEmpty && $0.unitPriceValue > 0 } }
 
     init(viewModel: InvoicingViewModel, claudeService: ClaudeAPIService, prefillClient: Client? = nil) {
@@ -322,8 +325,21 @@ struct InvoiceCreateView: View {
     private var invoiceDetailsGrid: some View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {
-                detailField("Invoice #", value: previewInvoiceNumber, isTeal: true)
+                // Editable invoice number
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Invoice #")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.5))
+                    TextField("", text: $invoiceNumber)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(theme.color(for: .invoicing))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(11)
+                        .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.white.opacity(0.06), lineWidth: 1))
+                }
 
+                // Terms picker
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Terms")
                         .font(.caption)
@@ -342,27 +358,46 @@ struct InvoiceCreateView: View {
                 }
             }
             HStack(spacing: 10) {
-                detailField("Date", value: invoiceDate.formatted(.dateTime.day().month(.abbreviated).year()))
-                detailField("Due", value: dueDate.formatted(.dateTime.day().month(.abbreviated).year()))
+                // Editable invoice date
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Date")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.5))
+                    DatePicker("", selection: $invoiceDate, displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        .tint(theme.color(for: .invoicing))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(7)
+                        .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.white.opacity(0.06), lineWidth: 1))
+                }
+
+                // Editable due date
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Due")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.5))
+                    DatePicker("", selection: $dueDate, displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        .tint(theme.color(for: .invoicing))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(7)
+                        .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(.white.opacity(0.06), lineWidth: 1))
+                }
             }
         }
-    }
-
-    private func detailField(_ label: String, value: String, isTeal: Bool = false) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.white.opacity(0.5))
-            Text(value)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(isTeal ? TabAccent.invoicing.color : .white)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(11)
-                .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .strokeBorder(.white.opacity(0.06), lineWidth: 1)
-                )
+        .onAppear {
+            if invoiceNumber.isEmpty { invoiceNumber = previewInvoiceNumber }
+            dueDate = computedDueDate
+        }
+        .onChange(of: paymentTerms) {
+            dueDate = computedDueDate
+        }
+        .onChange(of: invoiceDate) {
+            dueDate = computedDueDate
         }
     }
 
@@ -633,7 +668,7 @@ struct InvoiceCreateView: View {
     private func createAndPreview() {
         let invoice = createInvoice()
         let profile = PersistenceController.shared.getOrCreateBusinessProfile()
-        let pdf = InvoicePDFGenerator.generate(invoice: invoice, profile: profile)
+        let pdf = InvoicePDFGenerator.generate(invoice: invoice, profile: profile, brandColor: UIColor(theme.brandAccent))
         invoice.pdfData = pdf
         PersistenceController.shared.save()
         createdInvoice = invoice
@@ -650,7 +685,7 @@ struct InvoiceCreateView: View {
     private func createAndGeneratePDFOnly() {
         let invoice = createInvoice()
         let profile = PersistenceController.shared.getOrCreateBusinessProfile()
-        let pdf = InvoicePDFGenerator.generate(invoice: invoice, profile: profile)
+        let pdf = InvoicePDFGenerator.generate(invoice: invoice, profile: profile, brandColor: UIColor(theme.brandAccent))
         invoice.pdfData = pdf
         PersistenceController.shared.save()
         createdInvoice = invoice
@@ -671,6 +706,7 @@ struct InvoiceCreateView: View {
         invoice.notes = notes.isEmpty ? nil : notes
         invoice.issueDate = invoiceDate
         invoice.dueDate = dueDate
+        if !invoiceNumber.isEmpty { invoice.invoiceNumber = invoiceNumber }
         PersistenceController.shared.save()
 
         if !clientName.trimmingCharacters(in: .whitespaces).isEmpty {

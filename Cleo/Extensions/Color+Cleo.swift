@@ -56,7 +56,7 @@ extension View {
 
                 RadialGradient(
                     colors: [
-                        theme.brandAccent.opacity(0.06),
+                        theme.brandAccent.opacity(0.11),
                         Color.clear
                     ],
                     center: .topTrailing,

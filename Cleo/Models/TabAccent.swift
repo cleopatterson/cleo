@@ -7,17 +7,9 @@ enum TabAccent: String, CaseIterable {
     case roadmap
     case metrics
 
-    /// Shared theme reference — set once on app launch.
-    /// All `accent.color` calls resolve through this.
-    static var activeTheme: ThemeManager?
-
-    // MARK: - Colour (theme-aware, falls back to static defaults)
+    // MARK: - Colour (static fallbacks — used in previews and before theme loads)
 
     var color: Color {
-        if let theme = Self.activeTheme {
-            return theme.color(for: self)
-        }
-        // Static fallback (only used before theme loads)
         switch self {
         case .calendar: return Color.cleoCalendarPurple
         case .invoicing: return Color.cleoInvoicingGreen
@@ -67,23 +59,9 @@ enum TabAccent: String, CaseIterable {
         theme.color(for: self)
     }
 
-    // MARK: - Gradients (always theme-aware via .color)
-
-    var briefingGradientColors: [Color] {
-        let (r, g, b) = color.rgbComponents
-        return [
-            Color(red: r * 0.35, green: g * 0.35, blue: b * 0.35),
-            Color(red: r * 0.50, green: g * 0.50, blue: b * 0.50),
-            Color(red: r * 0.30, green: g * 0.30, blue: b * 0.30)
-        ]
-    }
+    // MARK: - Gradients (static fallback only — live views use ThemeManager via @Environment)
 
     var heroGradientColors: [Color] {
-        let (r, g, b) = color.rgbComponents
-        return [
-            Color(red: r * 0.40, green: g * 0.40, blue: b * 0.40),
-            Color(red: r * 0.55, green: g * 0.55, blue: b * 0.55),
-            Color(red: r * 0.30, green: g * 0.30, blue: b * 0.30)
-        ]
+        [color.atBrightness(0.36), color.atBrightness(0.48), color.atBrightness(0.28)]
     }
 }

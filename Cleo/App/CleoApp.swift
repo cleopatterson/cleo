@@ -23,10 +23,10 @@ struct CleoApp: App {
                 trustSyncService: trustSyncService
             )
             .preferredColorScheme(.dark)
+            .environment(theme)
             .onAppear {
                 let profile = persistence.getOrCreateBusinessProfile()
                 theme.loadFromProfile(profile)
-                TabAccent.activeTheme = theme
                 checkForSharedReceipt()
             }
             .onOpenURL { url in

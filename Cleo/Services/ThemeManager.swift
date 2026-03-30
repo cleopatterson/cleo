@@ -55,24 +55,25 @@ class ThemeManager {
     }
 
     // MARK: - Gradient Generators
+    // Uses HSB brightness adjustment so hue identity is preserved at dark levels.
+    // RGB multiplication (the previous approach) collapses all hues toward black
+    // making teal, blue, purple indistinguishable at 30-40% brightness.
 
     func briefingGradient(for tab: TabAccent) -> [Color] {
         let accent = color(for: tab)
-        let (r, g, b) = accent.rgbComponents
         return [
-            Color(red: r * 0.35, green: g * 0.35, blue: b * 0.35),
-            Color(red: r * 0.50, green: g * 0.50, blue: b * 0.50),
-            Color(red: r * 0.30, green: g * 0.30, blue: b * 0.30)
+            accent.atBrightness(0.32),
+            accent.atBrightness(0.42),
+            accent.atBrightness(0.26)
         ]
     }
 
     func heroGradient(for tab: TabAccent) -> [Color] {
         let accent = color(for: tab)
-        let (r, g, b) = accent.rgbComponents
         return [
-            Color(red: r * 0.40, green: g * 0.40, blue: b * 0.40),
-            Color(red: r * 0.55, green: g * 0.55, blue: b * 0.55),
-            Color(red: r * 0.30, green: g * 0.30, blue: b * 0.30)
+            accent.atBrightness(0.36),
+            accent.atBrightness(0.48),
+            accent.atBrightness(0.28)
         ]
     }
 
@@ -108,6 +109,14 @@ extension Color {
     var hexString: String {
         let (r, g, b) = rgbComponents
         return String(format: "#%02X%02X%02X", Int(r * 255), Int(g * 255), Int(b * 255))
+    }
+
+    /// Returns the color at a specific HSB brightness, preserving hue and saturation.
+    func atBrightness(_ targetBrightness: Double) -> Color {
+        let uiColor = UIColor(self)
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        uiColor.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        return Color(hue: Double(h), saturation: Double(s), brightness: targetBrightness, opacity: Double(a))
     }
 
     /// Shift hue by a fraction (0-1 wraps), optionally adjust saturation.

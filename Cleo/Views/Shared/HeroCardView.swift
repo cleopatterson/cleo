@@ -14,7 +14,11 @@ struct HeroCardView<Pills: View>: View {
     var emojiSize: CGFloat = 42
     @ViewBuilder var pills: () -> Pills
 
+    @Environment(ThemeManager.self) private var theme
     @State private var bobOffset: CGFloat = 0
+
+    private var accentColor: Color { theme.color(for: accent) }
+    private var gradientColors: [Color] { theme.heroGradient(for: accent) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -31,14 +35,14 @@ struct HeroCardView<Pills: View>: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(
                         LinearGradient(
-                            colors: accent.heroGradientColors,
+                            colors: gradientColors,
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
 
                 RadialGradient(
-                    colors: [accent.color.opacity(0.2), .clear],
+                    colors: [accentColor.opacity(0.2), .clear],
                     center: .topTrailing,
                     startRadius: 0,
                     endRadius: 200
@@ -48,7 +52,7 @@ struct HeroCardView<Pills: View>: View {
         }
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(accent.color.opacity(0.35), lineWidth: 1)
+                .strokeBorder(accentColor.opacity(0.35), lineWidth: 1)
         )
         .onAppear {
             withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
@@ -62,7 +66,7 @@ struct HeroCardView<Pills: View>: View {
         // Label
         Text(label)
             .font(.cleoBadge)
-            .foregroundStyle(accent.color.opacity(0.8))
+            .foregroundStyle(accentColor.opacity(0.8))
             .tracking(1.5)
 
         // Title + emoji
@@ -107,7 +111,7 @@ struct HeroCardView<Pills: View>: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(.cleoBadge)
-                    .foregroundStyle(accent.color.opacity(0.6))
+                    .foregroundStyle(accentColor.opacity(0.6))
                     .tracking(1.5)
 
                 Text(emptyMessage)

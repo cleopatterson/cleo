@@ -11,6 +11,9 @@ struct BriefingCardView: View {
     let accent: TabAccent
     var isLoading: Bool = false
 
+    @Environment(ThemeManager.self) private var theme
+    private var accentColor: Color { theme.color(for: accent) }
+
     struct StatPill: Identifiable {
         let id = UUID()
         let label: String
@@ -23,12 +26,12 @@ struct BriefingCardView: View {
             if let dateRange {
                 Text("✦ \(badge) · \(dateRange)")
                     .font(.cleoBadge)
-                    .foregroundStyle(accent.color)
+                    .foregroundStyle(accentColor)
                     .tracking(1.5)
             } else {
                 Text("✦ \(badge)")
                     .font(.cleoBadge)
-                    .foregroundStyle(accent.color)
+                    .foregroundStyle(accentColor)
                     .tracking(1.5)
             }
 
@@ -65,7 +68,7 @@ struct BriefingCardView: View {
 
                 // Accent glow — strong enough to tint the card visibly
                 RadialGradient(
-                    colors: [accent.color.opacity(0.35), accent.color.opacity(0.12), .clear],
+                    colors: [accentColor.opacity(0.35), accentColor.opacity(0.12), .clear],
                     center: .topLeading,
                     startRadius: 0,
                     endRadius: 350
@@ -91,10 +94,10 @@ struct BriefingCardView: View {
         let text = label.isEmpty ? value : "\(label): \(value)"
         return Text(text)
             .font(.cleoPill)
-            .foregroundStyle(accent.color)
+            .foregroundStyle(accentColor)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(accent.color.opacity(0.15), in: Capsule())
+            .background(accentColor.opacity(0.15), in: Capsule())
     }
 
     private var shimmer: some View {
