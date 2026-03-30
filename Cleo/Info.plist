@@ -31,6 +31,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>CLAUDE_API_KEY</key>
 	<string>$(CLAUDE_API_KEY)</string>
+	<key>GITHUB_TOKEN</key>
+	<string>$(GITHUB_TOKEN)</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Cleo needs full calendar access to create and manage your business events</string>
 	<key>NSCalendarsUsageDescription</key>

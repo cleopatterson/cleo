@@ -10,6 +10,7 @@ struct CleoApp: App {
 
     init() {
         trustSyncService = TrustSyncService(persistence: PersistenceController.shared)
+        DataSeeder.seedIfNeeded(context: PersistenceController.shared.viewContext)
     }
 
     var body: some Scene {

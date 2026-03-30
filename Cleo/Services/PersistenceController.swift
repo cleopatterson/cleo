@@ -44,8 +44,10 @@ struct PersistenceController {
             // Shared store — trust entities, CloudKit shared zone
             let sharedDesc = NSPersistentStoreDescription(url: baseURL.appendingPathComponent("Cleo-Shared.sqlite"))
             sharedDesc.configuration = "Shared"
+            // Using .private scope until a CKShare is created via "Invite Partner".
+            // Switching to .shared scope requires records to be assigned to a share zone first.
             let sharedOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: "iCloud.com.wallboard.cleo")
-            sharedOptions.databaseScope = .shared
+            sharedOptions.databaseScope = .private
             sharedDesc.cloudKitContainerOptions = sharedOptions
 
             container.persistentStoreDescriptions = [localDesc, sharedDesc]

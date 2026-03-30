@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var roadmapVM: RoadmapViewModel
     @State private var todoVM: TodoViewModel
     @State private var metricsVM: MetricsViewModel
+    @State private var bugReportsVM: BugReportsViewModel
 
     init(calendarService: DeviceCalendarService,
          claudeService: ClaudeAPIService,
@@ -46,6 +47,7 @@ struct ContentView: View {
             persistence: persistence,
             trustSyncService: trustSyncService
         ))
+        _bugReportsVM = State(initialValue: BugReportsViewModel(persistence: persistence))
     }
 
     var body: some View {
@@ -54,6 +56,7 @@ struct ContentView: View {
                 calendarVM: calendarVM,
                 invoicingVM: invoicingVM,
                 todoVM: todoVM,
+                bugReportsVM: bugReportsVM,
                 roadmapVM: roadmapVM,
                 metricsVM: metricsVM,
                 theme: theme

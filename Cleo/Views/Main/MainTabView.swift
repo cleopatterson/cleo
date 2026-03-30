@@ -6,6 +6,7 @@ struct MainTabView: View {
     @Bindable var calendarVM: CalendarViewModel
     @Bindable var invoicingVM: InvoicingViewModel
     @Bindable var todoVM: TodoViewModel
+    @Bindable var bugReportsVM: BugReportsViewModel
     @Bindable var roadmapVM: RoadmapViewModel
     @Bindable var metricsVM: MetricsViewModel
     @Bindable var theme: ThemeManager
@@ -39,7 +40,7 @@ struct MainTabView: View {
                 }
                 .tag(3)
 
-            TodoTabView(viewModel: todoVM, showingProfile: $showingProfile, theme: theme)
+            TodoTabView(viewModel: todoVM, bugReportsViewModel: bugReportsVM, showingProfile: $showingProfile, theme: theme)
                 .tabItem {
                     Label("Notes", systemImage: "note.text")
                 }

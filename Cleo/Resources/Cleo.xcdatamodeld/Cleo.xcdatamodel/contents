@@ -135,6 +135,17 @@
         <attribute name="lastUpdated" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="updatedBy" attributeType="String" defaultValueString=""/>
     </entity>
+    <entity name="BugReport" representedClassName="BugReport" syncable="NO">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String" defaultValueString=""/>
+        <attribute name="bugDescription" attributeType="String" defaultValueString=""/>
+        <attribute name="severityRaw" attributeType="String" defaultValueString="medium"/>
+        <attribute name="statusRaw" attributeType="String" defaultValueString="open"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="githubIssueUrl" optional="YES" attributeType="String"/>
+        <attribute name="githubIssueNumber" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
     <configuration name="Local" defaultModelVersionIdentifier="">
         <memberEntity name="BusinessProfile"/>
         <memberEntity name="Invoice"/>
@@ -145,6 +156,7 @@
         <memberEntity name="RoadmapTask"/>
         <memberEntity name="TodoNote"/>
         <memberEntity name="CalendarEvent"/>
+        <memberEntity name="BugReport"/>
     </configuration>
     <configuration name="Shared" defaultModelVersionIdentifier="">
         <memberEntity name="TrustFinancialSummary"/>

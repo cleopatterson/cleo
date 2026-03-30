@@ -41,6 +41,7 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CLAUDE_API_KEY: "$(CLAUDE_API_KEY)"
+        GITHUB_TOKEN: "$(GITHUB_TOKEN)"
         UILaunchScreen:
           UIColorName: AccentColor
         UISupportedInterfaceOrientations:

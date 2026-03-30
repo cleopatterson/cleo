@@ -1,10 +1,18 @@
 import SwiftUI
 
+private enum TabMode: String, CaseIterable {
+    case notes = "Notes"
+    case bugs = "Bugs"
+}
+
 struct TodoTabView: View {
     @Bindable var viewModel: TodoViewModel
+    @Bindable var bugReportsViewModel: BugReportsViewModel
     @Binding var showingProfile: Bool
     @Bindable var theme: ThemeManager
+    @State private var mode: TabMode = .notes
     @State private var noteToDelete: TodoNote?
+    @State private var bugToDelete: BugReport?
 
     private static let timestampFormatter: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
@@ -14,43 +22,25 @@ struct TodoTabView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    if viewModel.notes.isEmpty {
-                        VStack(spacing: 8) {
-                            Text("No notes yet")
-                                .font(.subheadline)
-                                .foregroundStyle(.white.opacity(0.3))
-                            Text("Tap + to create your first note.")
-                                .font(.caption)
-                                .foregroundStyle(.white.opacity(0.2))
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 30)
-                    } else {
-                        VStack(spacing: 8) {
-                            ForEach(viewModel.notes) { note in
-                                Button {
-                                    viewModel.editingNote = note
-                                    viewModel.showingNoteEditor = true
-                                } label: {
-                                    noteRow(note)
-                                }
-                                .tint(.primary)
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        noteToDelete = note
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                            }
-                        }
+            VStack(spacing: 0) {
+                Picker("Mode", selection: $mode) {
+                    ForEach(TabMode.allCases, id: \.self) { m in
+                        Text(m.rawValue).tag(m)
                     }
                 }
+                .pickerStyle(.segmented)
                 .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+
+                Group {
+                    if mode == .notes {
+                        notesContent
+                    } else {
+                        bugsContent
+                    }
+                }
             }
-            .contentMargins(.top, 8, for: .scrollContent)
             .cleoBackground(theme: theme)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
@@ -59,30 +49,20 @@ struct TodoTabView: View {
                     ProfileButtonView { showingProfile = true }
                 }
                 ToolbarItem(placement: .principal) {
-                    Text("To Do")
+                    Text("Notes")
                         .font(.system(.headline, design: .serif))
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        viewModel.editingNote = nil
-                        viewModel.showingNoteEditor = true
+                        if mode == .notes {
+                            viewModel.editingNote = nil
+                            viewModel.showingNoteEditor = true
+                        } else {
+                            bugReportsViewModel.editingBugReport = nil
+                            bugReportsViewModel.showingBugEditor = true
+                        }
                     } label: {
                         Image(systemName: "plus")
-                    }
-                }
-            }
-            .confirmationDialog(
-                "Delete \"\(noteToDelete?.wrappedTitle ?? "")\"?",
-                isPresented: Binding(
-                    get: { noteToDelete != nil },
-                    set: { if !$0 { noteToDelete = nil } }
-                ),
-                titleVisibility: .visible
-            ) {
-                Button("Delete", role: .destructive) {
-                    if let note = noteToDelete {
-                        viewModel.deleteNote(note)
-                        noteToDelete = nil
                     }
                 }
             }
@@ -95,7 +75,102 @@ struct TodoTabView: View {
                     }
                 }
                 .presentationBackground(.ultraThinMaterial)
+                .presentationDetents([.medium, .large])
             }
+            .sheet(isPresented: $bugReportsViewModel.showingBugEditor) {
+                BugReportEditorView(
+                    existingReport: bugReportsViewModel.editingBugReport,
+                    theme: theme
+                ) { title, description, severity in
+                    await bugReportsViewModel.createBugReport(title: title, description: description, severity: severity)
+                }
+                .presentationBackground(.ultraThinMaterial)
+                .presentationDetents([.medium, .large])
+            }
+            .confirmationDialog(
+                "Delete \"\(noteToDelete?.wrappedTitle ?? "")\"?",
+                isPresented: Binding(get: { noteToDelete != nil }, set: { if !$0 { noteToDelete = nil } }),
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    if let note = noteToDelete { viewModel.deleteNote(note); noteToDelete = nil }
+                }
+            }
+            .confirmationDialog(
+                "Delete \"\(bugToDelete?.title ?? "")\"?",
+                isPresented: Binding(get: { bugToDelete != nil }, set: { if !$0 { bugToDelete = nil } }),
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    if let bug = bugToDelete { bugReportsViewModel.deleteBugReport(bug); bugToDelete = nil }
+                }
+            }
+            .task(id: mode) {
+                if mode == .bugs {
+                    await bugReportsViewModel.syncStatusFromGitHub()
+                }
+            }
+        }
+    }
+
+    // MARK: - Notes Content
+
+    @ViewBuilder
+    private var notesContent: some View {
+        if viewModel.notes.isEmpty {
+            ContentUnavailableView("No Notes", systemImage: "note.text", description: Text("Tap + to create your first note."))
+        } else {
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(viewModel.notes) { note in
+                        Button {
+                            viewModel.editingNote = note
+                            viewModel.showingNoteEditor = true
+                        } label: {
+                            noteRow(note)
+                        }
+                        .tint(.primary)
+                        .contextMenu {
+                            Button(role: .destructive) { noteToDelete = note } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+            .contentMargins(.top, 8, for: .scrollContent)
+        }
+    }
+
+    // MARK: - Bugs Content
+
+    @ViewBuilder
+    private var bugsContent: some View {
+        if bugReportsViewModel.bugReports.isEmpty {
+            ContentUnavailableView("No Bug Reports", systemImage: "ladybug", description: Text("Tap + to report a bug."))
+        } else {
+            List {
+                ForEach(bugReportsViewModel.bugReports) { report in
+                    Button {
+                        bugReportsViewModel.editingBugReport = report
+                        bugReportsViewModel.showingBugEditor = true
+                    } label: {
+                        bugRow(report)
+                    }
+                    .tint(.primary)
+                    .listRowBackground(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.thinMaterial)
+                            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.white.opacity(0.15), lineWidth: 1))
+                            .padding(.vertical, 4)
+                    )
+                }
+                .onDelete { indexSet in
+                    if let index = indexSet.first { bugToDelete = bugReportsViewModel.bugReports[index] }
+                }
+            }
+            .scrollContentBackground(.hidden)
         }
     }
 
@@ -136,10 +211,86 @@ struct TodoTabView: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
-        )
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.white.opacity(0.15), lineWidth: 1))
+    }
+
+    // MARK: - Bug Row
+
+    private func bugRow(_ report: BugReport) -> some View {
+        HStack(spacing: 12) {
+            Circle()
+                .fill(statusColor(report.status))
+                .frame(width: 10, height: 10)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(report.title)
+                        .font(.headline)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    Text(report.severity.displayName)
+                        .font(.system(size: 9, weight: .bold))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(severityColor(report.severity).opacity(0.15))
+                        .foregroundStyle(severityColor(report.severity))
+                        .clipShape(Capsule())
+                }
+
+                if !report.bugDescription.isEmpty {
+                    Text(report.bugDescription)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                HStack {
+                    Text(report.status.displayName)
+                        .font(.caption)
+                        .foregroundStyle(statusColor(report.status))
+
+                    if report.hasGitHubIssue {
+                        Text("GH-\(report.githubIssueNumber)")
+                            .font(.system(size: 9, weight: .bold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.white.opacity(0.1))
+                            .foregroundStyle(.secondary)
+                            .clipShape(Capsule())
+                    }
+
+                    Spacer()
+
+                    if let date = report.updatedAt {
+                        Text(Self.timestampFormatter.localizedString(for: date, relativeTo: Date()))
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    // MARK: - Helpers
+
+    private func statusColor(_ status: BugStatus) -> Color {
+        switch status {
+        case .open: .orange
+        case .inProgress: .blue
+        case .fixed: .green
+        case .closed: .gray
+        }
+    }
+
+    private func severityColor(_ severity: BugSeverity) -> Color {
+        switch severity {
+        case .low: .gray
+        case .medium: .orange
+        case .high: .red
+        }
     }
 
     @ViewBuilder
@@ -160,13 +311,11 @@ struct TodoTabView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-
             if unchecked.count > 3 {
                 Text("+\(unchecked.count - 3) more")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
-
             if checked > 0 {
                 Text("\(checked)/\(total) done")
                     .font(.caption)

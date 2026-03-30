@@ -1,0 +1,56 @@
+name: Sync Bug Status
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  label-fixed:
+    # When a PR is merged, label any referenced bug-report issues as "fixed"
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label referenced bug issues as fixed
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            // Extract issue references from PR body safely (no shell injection)
+            const body = pr.data.body || '';
+            const matches = body.match(/#(\d+)/g) || [];
+
+            for (const ref of matches) {
+              const issueNumber = parseInt(ref.replace('#', ''), 10);
+              if (isNaN(issueNumber)) continue;
+
+              try {
+                const issue = await github.rest.issues.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                });
+                const labelNames = issue.data.labels.map(l => l.name);
+                if (!labelNames.includes('bug-report')) continue;
+
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: ['fixed'],
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  state: 'closed',
+                });
+              } catch (e) {
+                core.warning(`Could not process issue #${issueNumber}: ${e.message}`);
+              }
+            }
