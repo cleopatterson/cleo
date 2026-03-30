@@ -29,18 +29,12 @@ jobs:
           label_trigger: "bug-report"
           base_branch: main
           branch_prefix: fix/
-          claude_args: "--max-turns 25 --model claude-sonnet-4-6 --dangerously-skip-permissions"
+          claude_args: "--max-turns 25 --model claude-sonnet-4-6"
           show_full_output: true
           prompt: |
-            Fix the bug described in GitHub issue #${{ github.event.issue.number }}: "${{ github.event.issue.title }}"
-
-            Issue body:
-            ${{ github.event.issue.body }}
-
-            Key facts: SwiftUI iOS 17+, @Observable/@Bindable, Core Data (NSPersistentCloudKitContainer).
-            Read CLAUDE.md for full project conventions before making changes.
-            Keep the fix minimal. Build with: xcodebuild -project Cleo.xcodeproj -scheme Cleo -destination 'platform=iOS Simulator,name=iPhone 16' build
-            Create a branch prefixed with fix/ and open a pull request.
+            Fix the bug described in this issue. Read the issue title and body for details.
+            Read CLAUDE.md for project conventions. Keep the fix minimal.
+            Create a branch and pull request with the fix.
 
   comment-fix:
     if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')
@@ -62,5 +56,5 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           trigger_phrase: "@claude"
-          claude_args: "--max-turns 25 --model claude-sonnet-4-6 --dangerously-skip-permissions"
+          claude_args: "--max-turns 25 --model claude-sonnet-4-6"
           show_full_output: true
