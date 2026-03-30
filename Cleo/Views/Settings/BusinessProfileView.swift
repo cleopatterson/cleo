@@ -8,6 +8,7 @@ struct BusinessProfileView: View {
     var trustSyncService: TrustSyncService
 
     @State private var businessName = ""
+    @State private var tagline = ""
     @State private var appDisplayName = ""
     @State private var abn = ""
     @State private var address = ""
@@ -103,6 +104,7 @@ struct BusinessProfileView: View {
 
             Section("Business Details") {
                 TextField("Business Name", text: $businessName)
+                TextField("Tagline", text: $tagline)
                 TextField("ABN", text: $abn)
                     .keyboardType(.numberPad)
                 TextField("Address", text: $address)
@@ -244,6 +246,7 @@ struct BusinessProfileView: View {
 
         let profile = PersistenceController.shared.getOrCreateBusinessProfile()
         businessName = profile.businessName
+        tagline = profile.tagline ?? ""
         appDisplayName = profile.appDisplayName.isEmpty ? theme.appDisplayName : profile.appDisplayName
         abn = profile.abn ?? ""
         address = profile.address ?? ""
@@ -274,6 +277,7 @@ struct BusinessProfileView: View {
     private func save() {
         let profile = PersistenceController.shared.getOrCreateBusinessProfile()
         profile.businessName = businessName
+        profile.tagline = tagline.isEmpty ? nil : tagline
         profile.abn = abn.isEmpty ? nil : abn
         profile.address = address.isEmpty ? nil : address
         profile.email = email.isEmpty ? nil : email

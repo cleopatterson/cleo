@@ -8,6 +8,7 @@
         <attribute name="email" optional="YES" attributeType="String"/>
         <attribute name="phone" optional="YES" attributeType="String"/>
         <attribute name="logoImagePath" optional="YES" attributeType="String"/>
+        <attribute name="tagline" optional="YES" attributeType="String"/>
         <attribute name="appDisplayName" attributeType="String" defaultValueString=""/>
         <attribute name="brandAccentHex" attributeType="String" defaultValueString="#4CAE8D"/>
         <attribute name="isOnboarded" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
