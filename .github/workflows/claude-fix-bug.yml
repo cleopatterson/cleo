@@ -29,12 +29,14 @@ jobs:
           label_trigger: "bug-report"
           base_branch: main
           branch_prefix: fix/
-          claude_args: "--max-turns 25 --model claude-sonnet-4-6"
+          claude_args: "--max-turns 50 --model claude-sonnet-4-6"
           show_full_output: true
           prompt: |
-            Fix the bug described in this issue. Read the issue title and body for details.
-            Read CLAUDE.md for project conventions. Keep the fix minimal.
-            Create a branch and pull request with the fix.
+            Fix the bug described in this GitHub issue. The issue title and body describe the bug.
+            Read CLAUDE.md for project conventions. Keep the fix minimal and focused.
+            Work efficiently: identify the relevant files, make the fix, then immediately
+            commit to a new branch and open a pull request. Do not explore the codebase
+            extensively before acting — read only what you need to make the fix.
 
   comment-fix:
     if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')
@@ -56,5 +58,5 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           trigger_phrase: "@claude"
-          claude_args: "--max-turns 25 --model claude-sonnet-4-6"
+          claude_args: "--max-turns 50 --model claude-sonnet-4-6"
           show_full_output: true
