@@ -29,7 +29,7 @@ jobs:
           label_trigger: "bug-report"
           base_branch: main
           branch_prefix: fix/
-          claude_args: "--max-turns 25 --model claude-sonnet-4-6"
+          claude_args: "--max-turns 25 --model claude-sonnet-4-6 --dangerously-skip-permissions"
           show_full_output: true
           prompt: |
             Fix the bug described in this GitHub issue for the Cleo iOS app.
@@ -57,5 +57,5 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           trigger_phrase: "@claude"
-          claude_args: "--max-turns 25 --model claude-sonnet-4-6"
+          claude_args: "--max-turns 25 --model claude-sonnet-4-6 --dangerously-skip-permissions"
           show_full_output: true
