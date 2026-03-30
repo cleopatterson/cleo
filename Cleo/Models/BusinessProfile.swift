@@ -13,6 +13,7 @@ public class BusinessProfile: NSManagedObject, Identifiable {
     @NSManaged public var email: String?
     @NSManaged public var phone: String?
     @NSManaged public var logoImagePath: String?
+    @NSManaged public var tagline: String?
 
     // Personalisation
     @NSManaged public var appDisplayName: String     // "Cleo", "Arkie", etc.

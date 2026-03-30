@@ -77,10 +77,10 @@ enum InvoicePDFGenerator {
         nameAttr.draw(at: CGPoint(x: x, y: curY))
         curY += nameAttr.size().height + 3
 
-        // App display name as tagline (if set and different from business name)
-        if !profile.appDisplayName.isEmpty && profile.appDisplayName != profile.businessName {
+        // Tagline — shown under business name if set
+        if let tagline = profile.tagline, !tagline.isEmpty {
             let taglineFont = UIFont.systemFont(ofSize: 11, weight: .medium)
-            let taglineAttr = NSAttributedString(string: profile.appDisplayName, attributes: [
+            let taglineAttr = NSAttributedString(string: tagline, attributes: [
                 .font: taglineFont,
                 .foregroundColor: textMid
             ])
