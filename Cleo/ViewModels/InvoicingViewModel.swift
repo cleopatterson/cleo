@@ -103,7 +103,7 @@ class InvoicingViewModel {
 
     // MARK: - CRUD
 
-    func createInvoice(clientName: String, clientEmail: String, paymentTerms: PaymentTerms, lineItems: [(description: String, quantity: Double, unitPrice: Double)]) -> Invoice {
+    func createInvoice(clientName: String, clientEmail: String, paymentTerms: PaymentTerms, lineItems: [(description: String, quantity: Double, unitPrice: Double, discountPercent: Double)]) -> Invoice {
         let invoice = Invoice(context: context)
         invoice.id = UUID()
         invoice.invoiceNumber = PersistenceController.shared.nextInvoiceNumber()
@@ -121,6 +121,7 @@ class InvoicingViewModel {
             li.itemDescription = item.description
             li.quantity = item.quantity
             li.unitPrice = item.unitPrice
+            li.discountPercent = item.discountPercent
             li.sortOrder = Int16(i)
             li.invoice = invoice
         }

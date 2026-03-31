@@ -231,7 +231,7 @@ enum InvoicePDFGenerator {
 
         // Line items
         for item in invoice.lineItemsArray {
-            let lineTotal = item.quantity * item.unitPrice
+            let lineTotal = item.lineTotal
 
             // Description — bold
             let descAttr = NSMutableAttributedString(string: item.itemDescription, attributes: [
@@ -254,10 +254,16 @@ enum InvoicePDFGenerator {
 
             curY += max(descRect.height, cellFont.lineHeight) + 6
 
-            // Sub-description note if there's a quantity fraction (shows as italic below)
+            // Sub-note: qty breakdown and discount if applicable
+            var noteParts: [String] = []
             if item.quantity != 1.0 && item.quantity != 0.0 {
-                let noteStr = "\(formatQty(item.quantity)) × \(formatCurrency(item.unitPrice))"
-                let noteAttr = NSAttributedString(string: noteStr, attributes: [
+                noteParts.append("\(formatQty(item.quantity)) × \(formatCurrency(item.unitPrice))")
+            }
+            if item.discountPercent > 0 {
+                noteParts.append("\(formatQty(item.discountPercent))% discount")
+            }
+            if !noteParts.isEmpty {
+                let noteAttr = NSAttributedString(string: noteParts.joined(separator: "  ·  "), attributes: [
                     .font: descItalic, .foregroundColor: textLight
                 ])
                 noteAttr.draw(at: CGPoint(x: x, y: curY))
