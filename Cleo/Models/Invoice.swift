@@ -78,7 +78,7 @@ public class Invoice: NSManagedObject, Identifiable {
     }
 
     var subtotal: Double {
-        lineItemsArray.reduce(0) { $0 + ($1.quantity * $1.unitPrice) }
+        lineItemsArray.reduce(0) { $0 + $1.lineTotal }
     }
 
     var taxAmount: Double {

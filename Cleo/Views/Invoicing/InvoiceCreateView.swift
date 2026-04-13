@@ -60,10 +60,15 @@ struct InvoiceCreateView: View {
         var description = ""
         var quantity = "1"
         var unitPrice = ""
+        var discount = ""
 
         var quantityValue: Double { Double(quantity) ?? 1 }
         var unitPriceValue: Double { Double(unitPrice) ?? 0 }
-        var lineTotal: Double { quantityValue * unitPriceValue }
+        var discountValue: Double { Double(discount) ?? 0 }
+        var lineTotal: Double {
+            let base = quantityValue * unitPriceValue
+            return base * (1.0 - discountValue / 100.0)
+        }
     }
 
     private var subtotal: Double { lineItems.reduce(0) { $0 + $1.lineTotal } }
@@ -473,6 +478,19 @@ struct InvoiceCreateView: View {
                     .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 7))
                     .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(.white.opacity(0.06), lineWidth: 1))
 
+                HStack(spacing: 2) {
+                    TextField("0", text: item.discount)
+                        .keyboardType(.decimalPad)
+                        .frame(width: 36)
+                        .multilineTextAlignment(.trailing)
+                        .padding(6)
+                        .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 7))
+                        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(.white.opacity(0.06), lineWidth: 1))
+                    Text("%")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.35))
+                }
+
                 Spacer()
 
                 Text("$\(String(format: "%.2f", item.wrappedValue.lineTotal))")
@@ -658,7 +676,8 @@ struct InvoiceCreateView: View {
                 LineItemDraft(
                     description: item.itemDescription,
                     quantity: String(format: "%.0f", item.quantity),
-                    unitPrice: String(format: "%.2f", item.unitPrice)
+                    unitPrice: String(format: "%.2f", item.unitPrice),
+                    discount: item.discountPercent > 0 ? String(format: "%.0f", item.discountPercent) : ""
                 )
             }
             if lineItems.isEmpty { lineItems = [LineItemDraft()] }
@@ -701,7 +720,7 @@ struct InvoiceCreateView: View {
             clientName: clientName,
             clientEmail: clientEmail,
             paymentTerms: paymentTerms,
-            lineItems: validItems.map { ($0.description, $0.quantityValue, $0.unitPriceValue) }
+            lineItems: validItems.map { ($0.description, $0.quantityValue, $0.unitPriceValue, $0.discountValue) }
         )
         invoice.clientAddress = clientAddress.isEmpty ? nil : clientAddress
         invoice.notes = notes.isEmpty ? nil : notes

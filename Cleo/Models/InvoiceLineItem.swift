@@ -8,9 +8,11 @@ public class InvoiceLineItem: NSManagedObject, Identifiable {
     @NSManaged public var quantity: Double
     @NSManaged public var unitPrice: Double
     @NSManaged public var sortOrder: Int16
+    @NSManaged public var discountPercent: Double
     @NSManaged public var invoice: Invoice?
 
     var lineTotal: Double {
-        quantity * unitPrice
+        let base = quantity * unitPrice
+        return base * (1.0 - discountPercent / 100.0)
     }
 }
