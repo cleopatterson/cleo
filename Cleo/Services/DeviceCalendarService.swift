@@ -75,8 +75,9 @@ class DeviceCalendarService {
 
         for event in events {
             // Flatten multi-day events
-            var day = event.startDate!
-            let endDay = event.endDate ?? event.startDate!
+            guard let startDate = event.startDate else { continue }
+            var day = startDate
+            let endDay = event.endDate ?? startDate
             while day <= endDay {
                 let key = df.string(from: day)
                 dict[key, default: []].append(event)

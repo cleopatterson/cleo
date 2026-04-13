@@ -62,7 +62,7 @@ When fixing a bug, go directly to the relevant files — don't explore broadly.
 | Calendar | `Cleo/ViewModels/CalendarViewModel.swift`, `Cleo/Views/Calendar/` |
 | Notes/Bugs | `Cleo/ViewModels/TodoViewModel.swift`, `Cleo/ViewModels/BugReportsViewModel.swift` |
 | Persistence | `Cleo/Services/PersistenceController.swift` |
-| Theming | `Cleo/Theme/ThemeManager.swift` |
+| Theming | `Cleo/Services/ThemeManager.swift` |
 
 ## Don't Do
 - Don't add `@Published` or `ObservableObject` — use `@Observable`

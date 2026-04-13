@@ -55,7 +55,8 @@ class InvoicingViewModel {
             let lhsIdx = order.firstIndex(of: lhs.status) ?? 99
             let rhsIdx = order.firstIndex(of: rhs.status) ?? 99
             if lhsIdx != rhsIdx { return lhsIdx < rhsIdx }
-            return (lhs.dueDate ?? .distantFuture) < (rhs.dueDate ?? .distantFuture)
+            // Most recent first within each status group
+            return (lhs.issueDate ?? .distantPast) > (rhs.issueDate ?? .distantPast)
         }
     }
 
@@ -142,7 +143,11 @@ class InvoicingViewModel {
     func markAsPaid(_ invoice: Invoice) {
         invoice.statusRaw = InvoiceStatus.paid.rawValue
         invoice.paidDate = Date()
-        PersistenceController.shared.save()
+        do {
+            try context.save()
+        } catch {
+            print("markAsPaid save error: \(error.localizedDescription)")
+        }
         fetchInvoices()
         pushTrustSummary()
     }

@@ -267,6 +267,7 @@ struct OnboardingView: View {
                 let profile = PersistenceController.shared.getOrCreateBusinessProfile()
                 profile.businessName = businessName
                 theme.saveToProfile(profile)
+                DataSeeder.seedIfNeeded(context: PersistenceController.shared.viewContext)
                 onComplete()
             } label: {
                 Text("Let's go")

@@ -58,13 +58,6 @@ struct MainTabView: View {
     }
 
     private var accentForTab: Color {
-        switch selectedTab {
-        case 0: theme.calendarColor
-        case 1: theme.invoicingColor
-        case 2: theme.roadmapColor
-        case 3: theme.metricsColor
-        case 4: theme.todoColor
-        default: theme.brandAccent
-        }
+        theme.brandAccent
     }
 }

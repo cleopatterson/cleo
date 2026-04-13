@@ -100,8 +100,8 @@ struct InvoiceDetailView: View {
                     .foregroundStyle(TabAccent.invoicing.color)
 
                 HeroCardView<AnyView>.coloredPill(
-                    text: invoice.status.label,
-                    color: statusColor(invoice.status)
+                    text: currentStatus.label,
+                    color: statusColor(currentStatus)
                 )
             }
         }
@@ -248,11 +248,10 @@ struct InvoiceDetailView: View {
 
     private var actionsSection: some View {
         VStack(spacing: 8) {
-            if invoice.status != .paid {
+            if invoice.statusRaw != InvoiceStatus.paid.rawValue {
                 Button {
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     viewModel.markAsPaid(invoice)
-                    dismiss()
                 } label: {
                     Label("Mark as Paid", systemImage: "checkmark.circle.fill")
                         .font(.subheadline.bold())
@@ -304,6 +303,14 @@ struct InvoiceDetailView: View {
     }
 
     // MARK: - Helpers
+
+    /// Read status from statusRaw so SwiftUI picks up mutations on the managed object
+    private var currentStatus: InvoiceStatus {
+        if invoice.statusRaw == InvoiceStatus.sent.rawValue, let due = invoice.dueDate, due < Date() {
+            return .overdue
+        }
+        return InvoiceStatus(rawValue: invoice.statusRaw) ?? .draft
+    }
 
     private func detailRow(_ label: String, value: String) -> some View {
         HStack {

@@ -36,7 +36,7 @@ struct BusinessProfileView: View {
     @State private var trustABN = ""
     @State private var incomeTargetText = "20000"
     @State private var taxRateText = "30"
-    @State private var showingShareSheet = false
+    // showingShareSheet removed — CloudSharingButton presents directly via UIKit
 
     @State private var hasLoaded = false
     @State private var showResetConfirmation = false
@@ -227,16 +227,8 @@ struct BusinessProfileView: View {
                 Label("Partner connected", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
             } else {
-                Button("Invite Partner") {
-                    showingShareSheet = true
-                }
-                .foregroundStyle(.blue)
+                CloudSharingButton(trustSyncService: trustSyncService)
             }
-        }
-        .alert("Partner Sharing", isPresented: $showingShareSheet) {
-            Button("OK") {}
-        } message: {
-            Text("CloudKit sharing will be set up once both devices are running Cleo with iCloud sign-in. Use 'Invite Partner' from Settings → Trust once fully configured.")
         }
     }
 

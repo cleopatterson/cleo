@@ -1,5 +1,7 @@
 # Cleo — Business Planner for Solopreneurs
 
+> **⚠ ARCHIVED — March 2026 original brief. The app has evolved significantly since this was written (5 tabs, Metrics fully built, Notes/Bugs tab added, expenses implemented). Refer to `CLAUDE.md` for current state.**
+
 ## Claude Code Implementation Brief
 
 **Prepared:** March 2026

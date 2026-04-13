@@ -1,5 +1,7 @@
 # Cleo — Metrics Tab Redesign
 
+> **⚠ ARCHIVED — Superseded by `cleo-trust-dashboard-brief.md`, which has been implemented. Refer to `CLAUDE.md` for current Metrics tab state.**
+
 ## Summary
 
 Restructure the Metrics tab to lead with financial performance, pushing time tracking into a secondary position. The top of the screen should answer "how is my business going?" at a glance.

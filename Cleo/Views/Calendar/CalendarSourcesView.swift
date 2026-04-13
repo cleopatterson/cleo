@@ -12,7 +12,9 @@ struct CalendarSourcesView: View {
                 // MARK: - Categories
                 Section("Categories") {
                     Button {
-                        withAnimation { viewModel.toggleHistory() }
+                        DispatchQueue.main.async {
+                            viewModel.toggleHistory()
+                        }
                     } label: {
                         HStack(spacing: 12) {
                             Image(systemName: "clock.arrow.circlepath")
@@ -100,7 +102,11 @@ struct CalendarSourcesView: View {
         let enabled = service.isEnabled(calendar)
 
         return Button {
-            withAnimation { service.toggle(calendar) }
+            // Defer mutation to next runloop tick to avoid
+            // "setting value during update" AttributeGraph crash
+            DispatchQueue.main.async {
+                service.toggle(calendar)
+            }
         } label: {
             HStack(spacing: 12) {
                 Circle()

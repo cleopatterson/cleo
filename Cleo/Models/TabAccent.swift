@@ -7,16 +7,10 @@ enum TabAccent: String, CaseIterable {
     case roadmap
     case metrics
 
-    // MARK: - Colour (static fallbacks — used in previews and before theme loads)
+    // MARK: - Colour (single brand accent across all tabs)
 
     var color: Color {
-        switch self {
-        case .calendar: return Color.cleoCalendarPurple
-        case .invoicing: return Color.cleoInvoicingGreen
-        case .todo: return Color.cleoTodoPink
-        case .roadmap: return Color.cleoRoadmapAmber
-        case .metrics: return Color.cleoMetricsBlue
-        }
+        Color(hex: ThemeManager.currentBrandAccentHex)
     }
 
     var softColor: Color {
@@ -59,9 +53,10 @@ enum TabAccent: String, CaseIterable {
         theme.color(for: self)
     }
 
-    // MARK: - Gradients (static fallback only — live views use ThemeManager via @Environment)
+    // MARK: - Gradients
 
     var heroGradientColors: [Color] {
-        [color.atBrightness(0.36), color.atBrightness(0.48), color.atBrightness(0.28)]
+        let accent = color
+        return [accent.atBrightness(0.36), accent.atBrightness(0.48), accent.atBrightness(0.28)]
     }
 }

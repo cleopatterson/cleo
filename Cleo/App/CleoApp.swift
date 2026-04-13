@@ -1,7 +1,10 @@
 import SwiftUI
+import CloudKit
 
 @main
 struct CleoApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     let persistence = PersistenceController.shared
     let calendarService = DeviceCalendarService()
     let claudeService = ClaudeAPIService()
@@ -10,7 +13,12 @@ struct CleoApp: App {
 
     init() {
         trustSyncService = TrustSyncService(persistence: PersistenceController.shared)
-        DataSeeder.seedIfNeeded(context: PersistenceController.shared.viewContext)
+        // Seed after onboarding sets the business name — but also try here
+        // for existing installs that are already onboarded.
+        let profile = PersistenceController.shared.getOrCreateBusinessProfile()
+        if profile.isOnboarded {
+            DataSeeder.seedIfNeeded(context: PersistenceController.shared.viewContext)
+        }
     }
 
     var body: some Scene {
@@ -36,10 +44,17 @@ struct CleoApp: App {
                     }
                 }
             }
-        }
-        // Handle incoming CloudKit share acceptance (wife accepting the trust share invite)
-        .commands {
-            // no-op — share acceptance is handled via UIApplicationDelegate
+            // Handle CloudKit share acceptance (backup path for SwiftUI)
+            .onContinueUserActivity(
+                "com.apple.cloudsharingd.accept-share"
+            ) { activity in
+                print("[CloudKit] onContinueUserActivity: accept-share fired")
+                guard let metadata = activity.userInfo?["CKShareMetadata"] as? CKShare.Metadata else {
+                    print("[CloudKit] onContinueUserActivity: no CKShareMetadata in userInfo")
+                    return
+                }
+                SceneDelegate.acceptShare(metadata)
+            }
         }
     }
 

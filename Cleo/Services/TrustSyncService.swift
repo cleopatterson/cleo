@@ -81,6 +81,10 @@ class TrustSyncService {
         settings.basQuarterStartMonth = 7
         settings.lastUpdated = Date()
         settings.updatedBy = ""
+        // Assign to the private store so CloudKit can share it
+        if let store = persistence.privateStore {
+            persistence.viewContext.assign(settings, to: store)
+        }
         persistence.saveShared()
         return settings
     }
@@ -147,6 +151,10 @@ class TrustSyncService {
                 summary = TrustFinancialSummary(context: persistence.sharedContext)
                 summary.id = UUID()
                 summary.contributorID = contributorID
+                // Assign to private store so CloudKit syncs it
+                if let store = persistence.privateStore {
+                    persistence.viewContext.assign(summary, to: store)
+                }
             }
             summary.contributorName        = contributorName
             summary.yearMonth              = ym
@@ -208,6 +216,10 @@ class TrustSyncService {
             summary = TrustFinancialSummary(context: persistence.sharedContext)
             summary.id = UUID()
             summary.contributorID = contributorID
+            // Assign to private store so CloudKit syncs it
+            if let store = persistence.privateStore {
+                persistence.viewContext.assign(summary, to: store)
+            }
         }
 
         summary.contributorName       = contributorName

@@ -1,5 +1,7 @@
 # Cleo — Invoicing Workflow Redesign
 
+> **⚠ ARCHIVED — This redesign brief has been implemented. Refer to `CLAUDE.md` and the current codebase for the live invoicing flow.**
+
 ## Summary
 
 Redesign the Money tab invoicing flow to reduce friction. The current flow requires 6 screens to create a simple invoice. The new flow offers two paths: a **Quick Invoice** (1-tap from Money tab) and a **"+" button** path — both landing on the same single-screen creator.

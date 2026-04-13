@@ -5,9 +5,14 @@ import SwiftUI
 @Observable
 class ThemeManager {
     // User's chosen brand accent (stored as hex in BusinessProfile)
-    var brandAccentHex: String = "#4CAE8D"
+    var brandAccentHex: String = "#4CAE8D" {
+        didSet { Self.currentBrandAccentHex = brandAccentHex }
+    }
     var appDisplayName: String = "Cleo"
     var isOnboarded: Bool = false
+
+    /// Static accessor so TabAccent.color can read the brand accent without a theme instance.
+    static var currentBrandAccentHex: String = "#4CAE8D"
 
     var brandAccent: Color {
         Color(hex: brandAccentHex)
@@ -27,31 +32,10 @@ class ThemeManager {
         ("Amber", "#fbbf24"),
     ]
 
-    // MARK: - Tab Colours (all derived from brand accent)
-
-    /// Calendar — uses brand accent directly
-    var calendarColor: Color { brandAccent }
-
-    /// Money — warm shift (rotate hue +40°, boost saturation)
-    var invoicingColor: Color { brandAccent.hueShifted(by: 0.11, saturationMultiplier: 1.1) }
-
-    /// To Do — complementary shift (rotate hue +180°)
-    var todoColor: Color { brandAccent.hueShifted(by: 0.5, saturationMultiplier: 0.9) }
-
-    /// Roadmap — warm-opposite shift (rotate hue +80°)
-    var roadmapColor: Color { brandAccent.hueShifted(by: 0.22, saturationMultiplier: 1.0) }
-
-    /// Metrics — cool shift (rotate hue -90°)
-    var metricsColor: Color { brandAccent.hueShifted(by: -0.25, saturationMultiplier: 0.85) }
+    // MARK: - Tab Colours (single brand accent across all tabs)
 
     func color(for tab: TabAccent) -> Color {
-        switch tab {
-        case .calendar: calendarColor
-        case .invoicing: invoicingColor
-        case .todo: todoColor
-        case .roadmap: roadmapColor
-        case .metrics: metricsColor
-        }
+        brandAccent
     }
 
     // MARK: - Gradient Generators
@@ -60,20 +44,18 @@ class ThemeManager {
     // making teal, blue, purple indistinguishable at 30-40% brightness.
 
     func briefingGradient(for tab: TabAccent) -> [Color] {
-        let accent = color(for: tab)
-        return [
-            accent.atBrightness(0.32),
-            accent.atBrightness(0.42),
-            accent.atBrightness(0.26)
+        [
+            brandAccent.atBrightness(0.32),
+            brandAccent.atBrightness(0.42),
+            brandAccent.atBrightness(0.26)
         ]
     }
 
     func heroGradient(for tab: TabAccent) -> [Color] {
-        let accent = color(for: tab)
-        return [
-            accent.atBrightness(0.36),
-            accent.atBrightness(0.48),
-            accent.atBrightness(0.28)
+        [
+            brandAccent.atBrightness(0.36),
+            brandAccent.atBrightness(0.48),
+            brandAccent.atBrightness(0.28)
         ]
     }
 
@@ -81,7 +63,9 @@ class ThemeManager {
 
     func loadFromProfile(_ profile: BusinessProfile) {
         appDisplayName = profile.appDisplayName.isEmpty ? "Cleo" : profile.appDisplayName
-        brandAccentHex = profile.brandAccentHex.isEmpty ? "#4CAE8D" : profile.brandAccentHex
+        let hex = profile.brandAccentHex.isEmpty ? "#4CAE8D" : profile.brandAccentHex
+        brandAccentHex = hex
+        Self.currentBrandAccentHex = hex
         isOnboarded = profile.isOnboarded
     }
 

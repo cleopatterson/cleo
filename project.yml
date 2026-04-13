@@ -54,6 +54,7 @@ targets:
         NSCalendarsFullAccessUsageDescription: "Cleo needs full calendar access to create and manage your business events"
         NSCameraUsageDescription: "Cleo uses your camera to scan expense receipts"
         NSPhotoLibraryUsageDescription: "Cleo can import receipt photos from your library"
+        CKSharingSupported: true
         UIBackgroundModes:
           - remote-notification
         CFBundleURLTypes:

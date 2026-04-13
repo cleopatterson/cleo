@@ -277,9 +277,15 @@ struct InvoicingTabView: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.white.opacity(0.8))
 
-                Text(invoice.invoiceNumber)
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.4))
+                HStack(spacing: 6) {
+                    Text(invoice.invoiceNumber)
+                    if let date = invoice.issueDate {
+                        Text("·")
+                        Text(date.formatted(.dateTime.day().month(.abbreviated).year()))
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.white.opacity(0.4))
             }
 
             Spacer()

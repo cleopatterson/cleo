@@ -1,5 +1,7 @@
 # Cleo — Trust Dashboard & BAS Tracking
 
+> **⚠ ARCHIVED — This brief has been implemented. Refer to `CLAUDE.md` for current state.**
+
 ## Claude Code Implementation Brief
 
 **Prepared:** March 2026
