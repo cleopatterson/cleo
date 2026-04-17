@@ -9,6 +9,12 @@ class DeviceCalendarService {
     var enabledCalendarIDs: Set<String> = []
     var cacheVersion: Int = 0
 
+    private static let dayKeyFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        return df
+    }()
+
     var availableCalendars: [EKCalendar] {
         store.calendars(for: .event)
     }
@@ -70,8 +76,7 @@ class DeviceCalendarService {
         let events = store.events(matching: predicate)
 
         var dict: [String: [EKEvent]] = [:]
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd"
+        let df = Self.dayKeyFormatter
 
         for event in events {
             // Flatten multi-day events
@@ -96,9 +101,7 @@ class DeviceCalendarService {
         if yearCache[year] == nil {
             refreshCache(for: year)
         }
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd"
-        return yearCache[year]?[df.string(from: date)] ?? []
+        return yearCache[year]?[Self.dayKeyFormatter.string(from: date)] ?? []
     }
 
     func eventCount(on date: Date) -> Int {
@@ -111,11 +114,9 @@ class DeviceCalendarService {
         if yearCache[year] == nil {
             refreshCache(for: year)
         }
-        let df = DateFormatter()
-        df.dateFormat = "yyyy-MM-dd"
         var days = Set<Date>()
         for key in yearCache[year]?.keys ?? Dictionary<String, [EKEvent]>().keys {
-            if let date = df.date(from: key) {
+            if let date = Self.dayKeyFormatter.date(from: key) {
                 days.insert(cal.startOfDay(for: date))
             }
         }
