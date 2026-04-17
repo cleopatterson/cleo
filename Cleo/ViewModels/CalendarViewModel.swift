@@ -31,6 +31,7 @@ final class CalendarViewModel {
     @ObservationIgnored private var _allEventsCacheKey: String = ""
     @ObservationIgnored private var hasLoadedBriefing = false
     @ObservationIgnored private var hasLoadedNextWeekBriefing = false
+    @ObservationIgnored private var hasRefreshedCache = false
 
     /// Incremented on every event mutation to invalidate caches.
     var eventsVersion: Int = 0
@@ -226,6 +227,8 @@ final class CalendarViewModel {
     }
 
     func refreshDeviceCalendarCache() {
+        guard !hasRefreshedCache else { return }
+        hasRefreshedCache = true
         let year = Calendar.current.component(.year, from: selectedDate)
         calendarService.refreshCache(for: year)
         _cacheKey = ""

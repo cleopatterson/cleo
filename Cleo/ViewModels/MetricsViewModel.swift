@@ -21,6 +21,8 @@ class MetricsViewModel {
     private(set) var trustAggregate: TrustMonthlyAggregate = .empty
     private(set) var basQuarter: BASQuarterSummary?
 
+    @ObservationIgnored private var hasLoadedData = false
+
     init(timeService: TimeTrackingService,
          claudeService: ClaudeAPIService,
          persistence: PersistenceController,
@@ -187,6 +189,8 @@ class MetricsViewModel {
     // MARK: - Load
 
     func loadData() async {
+        guard !hasLoadedData else { return }
+        hasLoadedData = true
         await timeService.loadIfNeeded()
         refreshFinancials()
         trustAggregate = trustSyncService.combinedMonthlyData()
