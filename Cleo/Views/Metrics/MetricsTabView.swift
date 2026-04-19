@@ -58,7 +58,7 @@ struct MetricsTabView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("TIME TRACKING")
                 .font(.caption.bold())
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(.white.opacity(0.6))
                 .tracking(1)
                 .padding(.top, 8)
 
@@ -88,7 +88,7 @@ struct MetricsTabView: View {
             if let week = viewModel.selectedWeek {
                 Text(TimeTrackingService.weekLabel(week.weekStart))
                     .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(.white.opacity(0.85))
             }
 
             Spacer()
@@ -108,12 +108,12 @@ struct MetricsTabView: View {
             HStack {
                 Text("TOP CLIENT")
                     .font(.caption.bold())
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(.white.opacity(0.6))
                     .tracking(1)
                 Spacer()
                 Text(TimeTrackingService.weekLabel(week.weekStart))
                     .font(.caption2.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(.white.opacity(0.55))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
@@ -124,7 +124,7 @@ struct MetricsTabView: View {
                     Text(hero.name).font(.headline)
                     Text("\(hero.formattedHours) · \(viewModel.heroPercentage)% of your week")
                         .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(.white.opacity(0.75))
                 }
                 Spacer()
                 Text("🏆").font(.system(size: 28))
@@ -159,7 +159,7 @@ struct MetricsTabView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("HOURS BY CLIENT")
                 .font(.caption.bold())
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(.white.opacity(0.6))
                 .tracking(1)
                 .padding(.bottom, 4)
 
@@ -169,7 +169,7 @@ struct MetricsTabView: View {
                 HStack(spacing: 8) {
                     Text(client.name)
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(.white.opacity(0.75))
                         .frame(width: 90, alignment: .leading)
                         .lineLimit(1)
 
@@ -187,7 +187,7 @@ struct MetricsTabView: View {
 
                     Text(client.formattedHours)
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(.white.opacity(0.75))
                         .frame(width: 40, alignment: .trailing)
                 }
             }

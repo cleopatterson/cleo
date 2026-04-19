@@ -37,7 +37,7 @@ struct IncomeGapCard: View {
             Spacer()
             Text("This month")
                 .font(.caption2.weight(.medium))
-                .foregroundStyle(.white.opacity(0.35))
+                .foregroundStyle(.white.opacity(0.6))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
                 .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
@@ -86,7 +86,7 @@ struct IncomeGapCard: View {
             HStack {
                 Text("Target: $\(String(format: "%.0f", aggregate.incomeTarget))/mo")
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(.white.opacity(0.6))
                 Spacer()
                 if aggregate.gapAmount > 0 {
                     Text("Gap: $\(String(format: "%.0f", aggregate.gapAmount))")
@@ -121,7 +121,7 @@ struct IncomeGapCard: View {
         VStack(spacing: 4) {
             Text(label)
                 .font(.caption2)
-                .foregroundStyle(.white.opacity(0.45))
+                .foregroundStyle(.white.opacity(0.7))
                 .lineLimit(1)
             Text("$\(String(format: "%.0f", amount))")
                 .font(.subheadline.weight(.semibold))

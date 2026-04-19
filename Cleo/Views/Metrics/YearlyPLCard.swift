@@ -19,16 +19,16 @@ struct YearlyPLCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("PROFIT & LOSS")
                         .font(.caption.bold())
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(.white.opacity(0.6))
                         .tracking(1)
                     Text("Full year · \(fyLabel)")
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.3))
+                        .foregroundStyle(.white.opacity(0.55))
                 }
                 Spacer()
                 Text(fyLabel)
                     .font(.caption2.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(.white.opacity(0.6))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
@@ -122,7 +122,7 @@ struct YearlyPLCard: View {
                 AxisMarks(values: .automatic) { _ in
                     AxisValueLabel()
                         .font(.system(size: 9))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(.white.opacity(0.6))
                 }
             }
             .chartYAxis {
@@ -132,7 +132,7 @@ struct YearlyPLCard: View {
                         if let d = value.as(Double.self) {
                             Text("$\(abbreviate(d))")
                                 .font(.system(size: 9))
-                                .foregroundStyle(.white.opacity(0.35))
+                                .foregroundStyle(.white.opacity(0.6))
                         }
                     }
                 }
@@ -148,7 +148,7 @@ struct YearlyPLCard: View {
         VStack(spacing: 3) {
             Text(label)
                 .font(.caption2)
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(.white.opacity(0.6))
             Text("$\(abbreviate(value))")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(color)
@@ -167,7 +167,7 @@ struct YearlyPLCard: View {
             }
             Text(label)
                 .font(.caption2)
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(.white.opacity(0.6))
         }
     }
 
