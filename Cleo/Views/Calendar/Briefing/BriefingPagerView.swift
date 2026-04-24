@@ -212,12 +212,13 @@ struct BriefingPagerView: View {
                 highlights.append(WeekHighlight(
                     id: event.objectID.uriRepresentation().absoluteString + dayStart.description,
                     title: event.wrappedTitle,
-                    date: dayStart,
+                    date: event.wrappedStartDate,
                     icon: icon,
                     isPast: isPast,
                     isTodo: event.isTodo,
                     todoUrgency: event.isTodo ? event.urgencyState : nil,
-                    isCompleted: event.isCompleted
+                    isCompleted: event.isCompleted,
+                    isAllDay: event.isAllDay
                 ))
             }
 
@@ -225,12 +226,13 @@ struct BriefingPagerView: View {
                 highlights.append(WeekHighlight(
                     id: ekEvent.eventIdentifier + dayStart.description,
                     title: ekEvent.title ?? "Untitled",
-                    date: dayStart,
+                    date: ekEvent.startDate,
                     icon: eventEmoji(for: ekEvent.title ?? ""),
                     isPast: isPast,
                     isTodo: false,
                     todoUrgency: nil,
-                    isCompleted: false
+                    isCompleted: false,
+                    isAllDay: ekEvent.isAllDay
                 ))
             }
         }

@@ -9,10 +9,17 @@ struct WeekHighlight: Identifiable {
     let isTodo: Bool
     let todoUrgency: TodoUrgencyState?
     let isCompleted: Bool
+    let isAllDay: Bool
 
     private static let dayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "EEE"
+        return f
+    }()
+
+    private static let dayTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEE h:mm a"
         return f
     }()
 
@@ -28,7 +35,10 @@ struct WeekHighlight: Identifiable {
             }
             return Self.dayFormatter.string(from: date)
         }
-        return Self.dayFormatter.string(from: date)
+        if isAllDay {
+            return Self.dayFormatter.string(from: date)
+        }
+        return Self.dayTimeFormatter.string(from: date)
     }
 }
 
