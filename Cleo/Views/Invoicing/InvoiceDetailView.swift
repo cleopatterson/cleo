@@ -11,6 +11,7 @@ struct InvoiceDetailView: View {
     @State private var showDeleteConfirmation = false
     @State private var showShareSheet = false
     @State private var showMailComposer = false
+    @State private var showEditSheet = false
     @State private var pdfData: Data?
 
     var body: some View {
@@ -37,6 +38,14 @@ struct InvoiceDetailView: View {
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
+                    if currentStatus == .draft {
+                        Button("Edit") {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            showEditSheet = true
+                        }
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
             }
@@ -54,6 +63,13 @@ struct InvoiceDetailView: View {
                 viewModel.deleteInvoice(invoice)
                 dismiss()
             }
+        }
+        .sheet(isPresented: $showEditSheet) {
+            InvoiceCreateView(
+                viewModel: viewModel,
+                claudeService: viewModel.claudeService,
+                editingInvoice: invoice
+            )
         }
         .sheet(isPresented: $showShareSheet) {
             if let pdfData {

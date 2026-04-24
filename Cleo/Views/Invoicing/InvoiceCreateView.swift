@@ -9,6 +9,7 @@ struct InvoiceCreateView: View {
     @Bindable var viewModel: InvoicingViewModel
     let claudeService: ClaudeAPIService
     let prefillClient: Client?
+    let editingInvoice: Invoice?
 
     enum Mode: Int, CaseIterable {
         case invoice = 0
@@ -78,20 +79,22 @@ struct InvoiceCreateView: View {
     private var computedDueDate: Date { Calendar.current.date(byAdding: .day, value: paymentTerms.rawValue, to: invoiceDate) ?? invoiceDate }
     private var hasValidLineItems: Bool { lineItems.contains { !$0.description.isEmpty && $0.unitPriceValue > 0 } }
 
-    init(viewModel: InvoicingViewModel, claudeService: ClaudeAPIService, prefillClient: Client? = nil) {
+    init(viewModel: InvoicingViewModel, claudeService: ClaudeAPIService, prefillClient: Client? = nil, editingInvoice: Invoice? = nil) {
         self.viewModel = viewModel
         self.claudeService = claudeService
         self.prefillClient = prefillClient
+        self.editingInvoice = editingInvoice
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    // Toggle
-                    modeToggle
+                    if editingInvoice == nil {
+                        modeToggle
+                    }
 
-                    if mode == .invoice {
+                    if editingInvoice != nil || mode == .invoice {
                         invoiceForm
                     } else {
                         expenseForm
@@ -100,7 +103,7 @@ struct InvoiceCreateView: View {
                 .padding(16)
             }
             .cleoBackground()
-            .navigationTitle(mode == .invoice ? (isPrefilled ? "New Invoice" : "New") : "New Expense")
+            .navigationTitle(editingInvoice != nil ? "Edit Invoice" : (mode == .invoice ? (isPrefilled ? "New Invoice" : "New") : "New Expense"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
             .toolbar {
@@ -108,7 +111,7 @@ struct InvoiceCreateView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    if mode == .expense {
+                    if editingInvoice == nil && mode == .expense {
                         Button("Save") { saveExpense() }
                             .bold()
                             .disabled(expenseAmount.isEmpty)
@@ -119,7 +122,13 @@ struct InvoiceCreateView: View {
                     }
                 }
             }
-            .onAppear { prefillFromClient() }
+            .onAppear {
+                if editingInvoice != nil {
+                    prefillFromEditing()
+                } else {
+                    prefillFromClient()
+                }
+            }
             .sheet(isPresented: $showClientPicker) {
                 ClientPickerView(viewModel: viewModel) { client in
                     applyClient(client)
@@ -217,7 +226,9 @@ struct InvoiceCreateView: View {
             totalsCard
 
             // Actions
-            invoiceActions
+            if editingInvoice == nil {
+                invoiceActions
+            }
         }
     }
 
@@ -697,9 +708,66 @@ struct InvoiceCreateView: View {
     }
 
     private func saveDraft() {
-        createInvoice()
+        if editingInvoice != nil {
+            updateInvoice()
+        } else {
+            createInvoice()
+        }
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         dismiss()
+    }
+
+    private func prefillFromEditing() {
+        guard let invoice = editingInvoice else { return }
+        clientName = invoice.clientName
+        clientEmail = invoice.clientEmail
+        clientAddress = invoice.clientAddress ?? ""
+        invoiceDate = invoice.issueDate ?? Date()
+        dueDate = invoice.dueDate ?? Date()
+        invoiceNumber = invoice.invoiceNumber
+        paymentTerms = invoice.paymentTerms
+        notes = invoice.notes ?? ""
+        let items = invoice.lineItemsArray
+        lineItems = items.isEmpty ? [LineItemDraft()] : items.map { item in
+            LineItemDraft(
+                description: item.itemDescription,
+                quantity: item.quantity.truncatingRemainder(dividingBy: 1) == 0
+                    ? String(format: "%.0f", item.quantity)
+                    : String(format: "%.2f", item.quantity),
+                unitPrice: String(format: "%.2f", item.unitPrice),
+                discount: item.discountPercent > 0 ? String(format: "%.0f", item.discountPercent) : ""
+            )
+        }
+    }
+
+    private func updateInvoice() {
+        guard let invoice = editingInvoice else { return }
+        let context = PersistenceController.shared.viewContext
+        invoice.clientName = clientName
+        invoice.clientEmail = clientEmail
+        invoice.clientAddress = clientAddress.isEmpty ? nil : clientAddress
+        invoice.issueDate = invoiceDate
+        invoice.dueDate = dueDate
+        invoice.invoiceNumber = invoiceNumber
+        invoice.paymentTerms = paymentTerms
+        invoice.notes = notes.isEmpty ? nil : notes
+        invoice.lineItemsArray.forEach { context.delete($0) }
+        let validItems = lineItems.filter { !$0.description.isEmpty && $0.unitPriceValue > 0 }
+        for (i, item) in validItems.enumerated() {
+            let li = InvoiceLineItem(context: context)
+            li.id = UUID()
+            li.itemDescription = item.description
+            li.quantity = item.quantityValue
+            li.unitPrice = item.unitPriceValue
+            li.discountPercent = item.discountValue
+            li.sortOrder = Int16(i)
+            li.invoice = invoice
+        }
+        let profile = PersistenceController.shared.getOrCreateBusinessProfile()
+        let pdf = InvoicePDFGenerator.generate(invoice: invoice, profile: profile, brandColor: UIColor(theme.brandAccent))
+        invoice.pdfData = pdf
+        PersistenceController.shared.save()
+        viewModel.fetchInvoices()
     }
 
     private func createAndGeneratePDFOnly() {
